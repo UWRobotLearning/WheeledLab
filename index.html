@@ -33,13 +33,13 @@
   <section class="hero is-link is-fullheight video" style="overflow: hidden; position:relative;">
     <div class="hero-video" style="height: 100%; width: 177.77777778vh; min-width: 100%;min-height: 56.25vw;">
       <video playsinline autoplay muted loop>
-        <source src="./resources/drift_policy.mp4" type="video/mp4">
+        <source src="./resources/drift/drift_policy.mp4" type="video/mp4">
       </video>
     </div>
     <div class="hero-video is-hidden-tablet is-inline-block-mobile"
       style="height: 154.28571428vw; width: 100%; min-width:64.81481481vh;min-height:100%;">
       <video playsinline autoplay muted loop>
-        <source src="./resources/cover.mp4" type="video/mp4">
+        <source src="./resources/drift/drift_policy.mp4" type="video/mp4">
       </video>
     </div>
     <div class="overlay"></div>
@@ -155,7 +155,7 @@
     <!-- Hero footer: will stick at the bottom -->
   </section>
 
-<section class="section">
+<!-- <section class="section">
   <div class="container">
     <div class="columns is-centered has-text-centered">
       <div class="column is-two-thirds">
@@ -167,7 +167,7 @@
       </div>
     </div>
   </div>
-</section>
+</section> -->
 
 <!-- <section class="section">
   <div class="container" style="width: 50%">
@@ -219,136 +219,101 @@
 
       <!-- Right Column: Image -->
       <div class="column is-7">
-        <img src="./resources/fig1.png" alt="Description of the image" style="width: 100%;">
+        <img src="./resources/fig1.jpg" alt="Description of the image" style="width: 100%;">
       </div>
     </div>
   </div>
 </section>
 
-<!-- <h2 class="title is-1" style="text-align: center;">Baseline vs Trained Policy</h2> -->
 <section class="section">
   <div class="container">
     <section class="section">
     <div class="columns is-centered">
       <div class="column is-full-width is-centered has-text-centered">
         <h2 class="title is-2" style="text-align: center;">Drift Policy</h2>
-        <video controls autoplay loop muted playsinline src="./resources/drift_policy.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 0.5%;"></video>
+        <video controls autoplay loop muted playsinline src="./resources/drift/drift_policy.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 0.5%;"></video>
       </div>
     </div>
-    <!-- <div class="columns is-centered">
-      <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/drift_baseline.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
-      </div>
-      <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/drift_policy.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
-      </div>
-    </div> -->
     <div class="columns is-centered">
       <div class="column is-full-width is-centered has-text-centered">
         <figure>
-          <video controls autoplay loop muted playsinline src="./resources/drift_baseline.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+          <video controls autoplay loop muted playsinline src="./resources/drift/drift_baseline.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
           <figcaption>Baseline</figcaption>
         </figure>
       </div>
       <div class="column is-full-width is-centered has-text-centered">
         <figure>
-          <video controls autoplay loop muted playsinline src="./resources/drift_policy.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+          <video controls autoplay loop muted playsinline src="./resources/drift/drift_sim.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
           <figcaption>Training in Isaac Lab Simulation</figcaption>
         </figure>
       </div>
     </div>
-    <!-- <div class="columns is-centered">
-      <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/outdoor-slam-tow-specialist.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
-      </div>
-      <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/outdoor-slam-tire-specialist.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
-      </div>
-    </div> -->
   </div>
 </section>
 
-<!-- <h2 class="title is-2" style="text-align: center;">Deployment In Uneven Terrain</h2>
 <section class="section">
   <div class="container">
+    <section class="section">
     <div class="columns is-centered">
       <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/circle.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+        <h2 class="title is-2" style="text-align: center;">RGB Policy</h2>
+        <video controls autoplay loop muted playsinline src="./resources/rgb/mlp_aug_barricade_test8_edited.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 0.5%;"></video>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-full-width is-centered has-text-centered">
+        <figure>
+          <video controls autoplay loop muted playsinline src="./resources/rgb/CNN_No_Aug_Test_2_Failed_baseline.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+          <figcaption>Baseline</figcaption>
+        </figure>
       </div>
       <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/circle_2.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+        <figure>
+          <video controls autoplay loop muted playsinline src="./resources/rgb/rgb_sim_2.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+          <figcaption>Training in Isaac Lab Simulation</figcaption>
+        </figure>
       </div>
     </div>
   </div>
-</section> -->
+</section>
 
-<!-- <h2 class="title is-2" style="text-align: center;">Large-Scale Pre-training in Diverse Simulation</h2>
 <section class="section">
   <div class="container">
+    <section class="section">
     <div class="columns is-centered">
       <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/numeric_sim.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
-      </div>
-      <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/mujoco_sim.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+        <h2 class="title is-2" style="text-align: center;">Elevation Policy</h2>
+        <video controls autoplay loop muted playsinline src="./resources/elevation/elevation_policy_success.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 0.5%;"></video>
       </div>
     </div>
     <div class="columns is-centered">
-    <div class="column is-full-width is-centered has-text-centered">
-      <video controls autoplay loop muted playsinline src="./resources/isaac.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+      <div class="column is-full-width is-centered has-text-centered">
+        <video controls autoplay loop muted playsinline src="./resources/elevation/mvi_1035_success.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+      </div>
+      <div class="column is-full-width is-centered has-text-centered">
+        <video controls autoplay loop muted playsinline src="./resources/elevation/mvi_1048_success.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+      </div>
+      <div class="column is-full-width is-centered has-text-centered">
+        <video controls autoplay loop muted playsinline src="./resources/elevation/mvi_1049_success.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+      </div>
     </div>
-    <div class="column is-full-width is-centered has-text-centered">
-      <video controls autoplay loop muted playsinline src="./resources/ac_sim.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
-    </div>
-  </div>
-  </div>
-</section> -->
-<!-- 
-<h2 class="title is-2" style="text-align: center;">Few-shot Real-world Fine-tuning (Teleoperation)</h2>
-<section class="section">
-  <div class="container">
     <div class="columns is-centered">
       <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/teleop.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+        <figure>
+          <video controls autoplay loop muted playsinline src="./resources/elevation/mvi_1065_baseline_fail.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+          <figcaption>Baseline</figcaption>
+        </figure>
       </div>
       <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/teleop-run.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+        <figure>
+          <video controls autoplay loop muted playsinline src="./resources/elevation/elevation_simulation_cropped.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+          <figcaption>Training in Isaac Lab Simulation</figcaption>
+        </figure>
       </div>
     </div>
   </div>
-</section> -->
+</section>
 
-<!-- <h2 class="title is-2" style="text-align: center;">Out-of-Domain Adaptation</h2>
-<section class="section">
-  <div class="container">
-    <div class="columns is-centered">
-      <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/vicon-1.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
-      </div>
-      <div class="column is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/vicon-2.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;" height="20%"></video>
-      </div>
-      <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/vicon-3.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
-      </div>
-    </div> -->
-    
-  <!-- </div>
-  <div class="container">
-    <div class="columns is-centered">
-      <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/vicon-4.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
-      </div>
-      <div class="column is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/vicon-5.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;" height="20%"></video>
-      </div>
-      <div class="column is-full-width is-centered has-text-centered">
-        <video controls autoplay loop muted playsinline src="./resources/vicon-6.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
-      </div>
-    </div>
-    
-  </div>
-</section> -->
 
 <!-- <h2 class="title is-2" style="text-align: center;">One More Thing ...</h2>
 <h2 class="title is-4" style="text-align: center;">We Open-Source Our 1/16 Car Design for Wheeled Agility Research</h2>
