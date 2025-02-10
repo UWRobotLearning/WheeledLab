@@ -111,31 +111,31 @@
         <div class="column has-text-centered is-hidden-tablet">
           <div class="publication-links">
             <!-- PDF Link. -->
-            <span class="link-block">
+            <!-- <span class="link-block">
               <a href="" class="external-link button is-normal is-rounded is-dark">
                 <span class="icon">
                   <img src="./static/images/pdf.svg" alt="PDF" />
                 </span>
                 <span>Paper</span>
               </a>
-            </span>
-            <span class="link-block">
+            </span> -->
+            <!-- <span class="link-block">
               <a href="" class="external-link button is-normal is-rounded is-dark">
                 <span class="icon">
                   <img src="./static/images/arxiv.svg" alt="ArXiv" />
                 </span>
                 <span>arXiv</span>
               </a>
-            </span>
+            </span> -->
             <!-- Video Link. -->
-            <span class="link-block">
+            <!-- <span class="link-block">
               <a href="" class="external-link button is-normal is-rounded is-dark">
                 <span class="icon">
                   <img src="./static/images/youtube.svg" alt="Youtube" />
                 </span>
                 <span>Video</span>
               </a>
-            </span>
+            </span> -->
             <!-- Code Link. -->
             <span class="link-block">
               <a href="https://github.com/UWRobotLearning/WheeledLab"
@@ -198,12 +198,21 @@
     <h2 class="title is-5 has-text-centered" style="width: 80vw; max-width: 1000px; margin: 0 auto; padding: 0 0px;">We developed and showcased below three state-of-the-art policies for small-scale RC cars: controlled drifting, elevation traversal, and visual navigation, each trained in simulation and deployed in the
       real world.</h2>
     <section class="section">
-    <div class="columns is-centered">
-      <div class="column is-full-width is-centered has-text-centered">
-        <h2 class="title is-2" style="text-align: center;">Drift Policy</h2>
-        <video controls autoplay loop muted playsinline src="./resources/drift/drift_policy.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 0.5%;"></video>
+      <h2 class="title is-2" style="text-align: center;">Drift Policy</h2>
+      <div class="columns is-centered">
+        <div class="column is-full-width is-centered has-text-centered">
+          <figure>
+            <video controls autoplay loop muted playsinline src="./resources/drift/drift_policy.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 0.5%;"></video>
+            <figcaption>Drift Policy</figcaption>
+          </figure>
+        </div>
+        <div class="column is-full-width is-centered has-text-centered">
+          <figure>
+            <video controls autoplay loop muted playsinline src="./resources/drift/drift_deployment_on_much_lower_friction.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+            <figcaption>Deployment on surface with much lower friction</figcaption>
+          </figure>
+        </div>
       </div>
-    </div>
     <div class="columns is-centered">
       <div class="column is-full-width is-centered has-text-centered">
         <figure>
@@ -228,13 +237,13 @@
       <div class="columns is-centered">
         <div class="column is-full-width is-centered has-text-centered">
           <figure>
-            <video controls autoplay loop muted playsinline src="./resources/rgb/mlp_aug_barricade_test8_success.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 0.5%;"></video>
+            <video controls autoplay loop muted playsinline src="./resources/rgb/mlp_aug_barricade.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 0.5%;"></video>
             <figcaption>Policy with moving barricade</figcaption>
           </figure>
         </div>
         <div class="column is-full-width is-centered has-text-centered">
           <figure>
-            <video controls autoplay loop muted playsinline src="./resources/rgb/mlp_aug_test2_success_edited.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+            <video controls autoplay loop muted playsinline src="./resources/rgb/mlp_aug_test.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
             <figcaption>Policy without moving barricade</figcaption>
           </figure>
         </div>
@@ -242,7 +251,7 @@
       <div class="columns is-centered">
         <div class="column is-full-width is-centered has-text-centered">
           <figure>
-            <video controls autoplay loop muted playsinline src="./resources/rgb/CNN_No_Aug_Test_2_Failed_baseline.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
+            <video controls autoplay loop muted playsinline src="./resources/rgb/CNN_No_Aug_baseline.mp4" poster="./resources/loading-icon.gif" style="border: 1px solid #bbb; border-radius: 10px; margin: 1.0%;"></video>
             <figcaption>Baseline</figcaption>
           </figure>
         </div>
