@@ -11,8 +11,13 @@ from gymnasium import error
 from gymnasium.wrappers.record_video import RecordVideo
 from gymnasium.wrappers.monitoring.video_recorder import VideoRecorder
 
-class WandbVideoRecorder(VideoRecorder):
+class CustomVideoRecorder(VideoRecorder):
     """Overrides the close method to write videos to wandb."""
+    wandb = None
+
+    def enable_wandb(self, wandb):
+        self.wandb = wandb
+
     def close(self):
         """Flush all data to disk and close any open frame encoders."""
         if not self.enabled or self._closed:
@@ -22,12 +27,9 @@ class WandbVideoRecorder(VideoRecorder):
         if len(self.recorded_frames) > 0:
             H, W = self.recorded_frames[0].shape[:2]
             video = cv2.VideoWriter(self.path, cv2.VideoWriter_fourcc(*'mp4v'), 30, (W, H))
-
             for image in self.recorded_frames:
                 # bgr to rgb
                 video.write(image[..., ::-1])
-
-            cv2.destroyAllWindows()
             video.release()
 
             ######## Below adopted from original library (memory leak) ##############
@@ -44,10 +46,9 @@ class WandbVideoRecorder(VideoRecorder):
             #########################################################################
 
             # log video to wandb
-            wandb.log({"Video": wandb.Video(self.path)}, commit=False)
-            del self.recorded_frames, self.render_history
-            self.recorded_frames = []
-            self.recorded_history = []
+            if self.wandb:
+                wandb.log({"Video": wandb.Video(self.path)}, commit=False)
+            self.recorded_frames, self.recorded_history = [], []
         else:
             # No frames captured. Set metadata.
             if self.metadata is None:
@@ -60,7 +61,7 @@ class WandbVideoRecorder(VideoRecorder):
         self._closed = True
 
 
-class WandbRecordVideo(RecordVideo):
+class CustomRecordVideo(RecordVideo):
 
     def __init__(
         self,
@@ -71,12 +72,14 @@ class WandbRecordVideo(RecordVideo):
         video_length: int = 0,
         name_prefix: str = "rl-video",
         disable_logger: bool = False,
+        enable_wandb: bool = True,
     ):
-        if wandb.run.name is None:
+        if enable_wandb and wandb.run.name is None:
             raise ValueError("wandb must be initialized before wrapping.")
 
         super().__init__(env, video_folder, episode_trigger,
                             step_trigger, video_length, name_prefix, disable_logger)
+        self.enable_wandb = enable_wandb
 
     def start_video_recorder(self):
         """Starts video recorder using :class:`video_recorder.VideoRecorder`."""
@@ -87,12 +90,13 @@ class WandbRecordVideo(RecordVideo):
             video_name = f"{self.name_prefix}-episode-{self.episode_id}"
 
         base_path = os.path.join(self.video_folder, video_name)
-        self.video_recorder = WandbVideoRecorder(
+        self.video_recorder = CustomVideoRecorder(
             env=self.env,
             base_path=base_path,
             metadata={"step_id": self.step_id, "episode_id": self.episode_id},
             disable_logger=self.disable_logger,
         )
+        self.video_recorder.enable_wandb(self.enable_wandb)
 
         self.video_recorder.capture_frame()
         self.recorded_frames = 1

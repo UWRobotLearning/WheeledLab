@@ -24,7 +24,7 @@ from wheeledlab_rl import WHEELEDLAB_RL_LOGS_DIR
 
 from wheeledlab_rl.utils import (
     OnPolicyRunner as ModifiedRslRunner,
-    WandbRecordVideo,
+    CustomRecordVideo,
     hydra_run_config,
     ClipAction,
 )
@@ -75,20 +75,16 @@ def main(run_cfg: RunConfig): # TODO: Add SB3 config support
             "step_trigger": lambda step: step % log_cfg.video_interval == 0,
             "video_length": log_cfg.video_length,
             "disable_logger": True,
+            "enable_wandb": not log_cfg.no_wandb,
         }
         print("[INFO] Recording videos during training.")
         print_dict(video_kwargs, nesting=4)
-
-        if log_cfg.no_wandb:
-            env = gym.wrappers.RecordVideo(env, **video_kwargs)
-        else:
-            env = WandbRecordVideo(env, **video_kwargs)
+        env = CustomRecordVideo(env, **video_kwargs)
 
     # TODO: add back support for SB3
     env = RslRlVecEnvWrapper(env)
 
     runner = ModifiedRslRunner(env, agent_cfg.to_dict(), log_cfg, device=train_cfg.device)
-    # runner = Runner(env, agent, device=train_cfg.device)
 
     ##### LOAD EXISTING RUN? #####
 
