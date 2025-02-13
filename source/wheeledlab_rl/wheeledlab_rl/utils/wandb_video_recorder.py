@@ -11,8 +11,6 @@ from gymnasium import error
 from gymnasium.wrappers.record_video import RecordVideo
 from gymnasium.wrappers.monitoring.video_recorder import VideoRecorder
 
-
-
 class WandbVideoRecorder(VideoRecorder):
     """Overrides the close method to write videos to wandb."""
     def close(self):

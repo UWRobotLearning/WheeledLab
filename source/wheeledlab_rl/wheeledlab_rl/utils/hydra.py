@@ -49,6 +49,7 @@ def rl_run_cfg_from_dict(run_cfg:DictConfig, run_config_name: str, cfg: Dict[str
     update_class_from_dict(update_run_cfg.train, run_cfg.train)
     update_run_cfg.env_setup.from_dict(cfg['env_setup'])
     update_run_cfg.agent_setup.from_dict(cfg['agent_setup'])
+    update_run_cfg.train.from_dict(cfg['train'])
 
     # Construct configclasses for missing types
     if env_cfg_class:
