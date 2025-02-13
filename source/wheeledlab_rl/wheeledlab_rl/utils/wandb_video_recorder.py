@@ -1,6 +1,7 @@
 
 import os
 import os.path
+import cv2
 from typing import Callable
 import wandb
 
@@ -9,6 +10,8 @@ from gymnasium import error
 
 from gymnasium.wrappers.record_video import RecordVideo
 from gymnasium.wrappers.monitoring.video_recorder import VideoRecorder
+
+
 
 class WandbVideoRecorder(VideoRecorder):
     """Overrides the close method to write videos to wandb."""
@@ -19,19 +22,35 @@ class WandbVideoRecorder(VideoRecorder):
 
         # Close the encoder
         if len(self.recorded_frames) > 0:
-            try:
-                from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
-            except ImportError as e:
-                raise error.DependencyNotInstalled(
-                    "moviepy is not installed, run `pip install moviepy`"
-                ) from e
+            print(self.path)
+            H, W = self.recorded_frames[0].shape[:2]
+            video = cv2.VideoWriter(self.path, cv2.VideoWriter_fourcc(*'mp4v'), 30, (W, H))
 
-            clip = ImageSequenceClip(self.recorded_frames, fps=self.frames_per_sec)
-            moviepy_logger = None if self.disable_logger else "bar"
-            clip.write_videofile(self.path, logger=moviepy_logger)
+            for image in self.recorded_frames:
+                # bgr to rgb
+                video.write(image[..., ::-1])
+
+            cv2.destroyAllWindows()
+            video.release()
+
+            ######## Below adopted from original library (memory leak) ##############
+            # try:
+            #     from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
+            # except ImportError as e:
+            #     raise error.DependencyNotInstalled(
+            #         "moviepy is not installed, run `pip install moviepy`"
+            #     ) from e
+
+            # clip = ImageSequenceClip(self.recorded_frames, fps=self.frames_per_sec)
+            # moviepy_logger = None if self.disable_logger else "bar"
+            # clip.write_videofile(self.path, logger=moviepy_logger)
+            #########################################################################
 
             # log video to wandb
             wandb.log({"Video": wandb.Video(self.path)}, commit=False)
+            del self.recorded_frames, self.render_history
+            self.recorded_frames = []
+            self.recorded_history = []
         else:
             # No frames captured. Set metadata.
             if self.metadata is None:
