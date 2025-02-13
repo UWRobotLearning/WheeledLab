@@ -22,7 +22,6 @@ class WandbVideoRecorder(VideoRecorder):
 
         # Close the encoder
         if len(self.recorded_frames) > 0:
-            print(self.path)
             H, W = self.recorded_frames[0].shape[:2]
             video = cv2.VideoWriter(self.path, cv2.VideoWriter_fourcc(*'mp4v'), 30, (W, H))
 
