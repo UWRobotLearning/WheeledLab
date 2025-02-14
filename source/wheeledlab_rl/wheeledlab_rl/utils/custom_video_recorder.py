@@ -1,12 +1,11 @@
 
 import os
 import os.path
-import cv2
+import av
 from typing import Callable
 import wandb
 
 import gymnasium as gym
-from gymnasium import error
 
 from gymnasium.wrappers.record_video import RecordVideo
 from gymnasium.wrappers.monitoring.video_recorder import VideoRecorder
@@ -26,16 +25,23 @@ class CustomVideoRecorder(VideoRecorder):
         # Close the encoder
         if len(self.recorded_frames) > 0:
             H, W = self.recorded_frames[0].shape[:2]
-            video = cv2.VideoWriter(self.path, cv2.VideoWriter_fourcc(*'mp4v'), 30, (W, H))
-            for image in self.recorded_frames:
-                # bgr to rgb
-                video.write(image[..., ::-1])
-            video.release()
+            output = av.open(self.path, 'w')
+            output_stream = output.add_stream('h264', rate=30)
+            output_stream.width = W
+            output_stream.height = H
+            output_stream.pix_fmt = 'yuv420p'
+            for frame in self.recorded_frames:
+                packet = output_stream.encode(av.VideoFrame.from_ndarray(frame, format='rgb24'))
+                output.mux(packet)
+            packet = output_stream.encode(None)
+            output.mux(packet)
+            output.close()
 
             ######## Below adopted from original library (memory leak) ##############
             # try:
             #     from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
             # except ImportError as e:
+            #     from gymnasium import error
             #     raise error.DependencyNotInstalled(
             #         "moviepy is not installed, run `pip install moviepy`"
             #     ) from e
