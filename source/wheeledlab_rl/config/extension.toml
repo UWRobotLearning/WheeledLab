@@ -21,7 +21,10 @@ keywords = ["extension", "isaaclab"]
 "isaaclab_rl" = {}
 "isaaclab_tasks" = {}
 # NOTE: Add additional dependencies here
+"wheeledlab" = {}
+"wheeledlab_tasks" = {}
 "rich" = {}
+"pyav" = {}
 
 [[python.module]]
 name = "wheeledlab_rl"
