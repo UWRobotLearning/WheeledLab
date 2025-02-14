@@ -26,10 +26,11 @@ class CustomVideoRecorder(VideoRecorder):
         if len(self.recorded_frames) > 0:
             H, W = self.recorded_frames[0].shape[:2]
             output = av.open(self.path, 'w')
-            output_stream = output.add_stream('h264', rate=round(self.frames_per_sec))
+            output_stream = output.add_stream('libx264', rate=round(self.frames_per_sec))
             output_stream.width = W
             output_stream.height = H
-            output_stream.pix_fmt = 'yuv420p'
+            output_stream.pix_fmt = "yuv444p"
+            output_stream.options = {"crf": "0", "preset": "veryslow"}
             for frame in self.recorded_frames:
                 packet = output_stream.encode(av.VideoFrame.from_ndarray(frame, format='rgb24'))
                 output.mux(packet)
