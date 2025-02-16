@@ -24,7 +24,7 @@ keywords = ["extension", "isaaclab"]
 "wheeledlab" = {}
 "wheeledlab_tasks" = {}
 "rich" = {}
-"pyav" = {}
+"av" = {}
 
 [[python.module]]
 name = "wheeledlab_rl"
@@ -32,7 +32,7 @@ name = "wheeledlab_rl"
 [isaaclab_settings]
 # TODO: Uncomment and list any apt dependencies here.
 #       If none, leave it commented out.
-# apt_deps = ["example_package"]
+apt_deps = ["libx264-dev"]
 # TODO: Uncomment and provide path to a ros_ws
 #       with rosdeps to be installed. If none,
 #       leave it commented out.

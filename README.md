@@ -3,6 +3,12 @@
 ---
 
 # WheeledLab
+
+[![IsaacLab](https://img.shields.io/badge/IsaacLab-2.0.0-silver.svg)](https://isaac-sim.github.io/IsaacLab/v2.0.0/)
+[![IsaacSim](https://img.shields.io/badge/IsaacSim-4.5.0-silver.svg)](https://docs.isaacsim.omniverse.nvidia.com/latest/index.html)
+[![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://docs.python.org/3/whatsnew/3.10.html)
+[![Linux platform](https://img.shields.io/badge/platform-linux--64-orange.svg)](https://releases.ubuntu.com/20.04/)
+
 Environments, assets, workflow for open-source mobile robotics, integrated with IsaacLab.
 
 [Website](https://uwrobotlearning.github.io/WheeledLab/) | [Paper](https://arxiv.org/abs/2502.07380)
@@ -31,19 +37,19 @@ pip install -e wheeledlab_rl
 
 To start a drifting run:
 
-```
+```bash
 python source/wheeledlab_rl/scripts/train_rl.py --headless -r RSS_DRIFT_CONFIG 
 ```
 
 To start a elevation run:
 
-```
+```bash
 python source/wheeledlab_rl/scripts/train_rl.py --headless -r RSS_ELEV_CONFIG 
 ```
 
 To start a visual run:
 
-```
+```bash
 python source/wheeledlab_rl/scripts/train_rl.py --headless -r RSS_VISUAL_CONFIG 
 ```
 
@@ -51,7 +57,7 @@ See details about training in the `wheeledlab_rl` [README.md](source/wheeledlab_
 
 ## Deployment
 
-We decided to keep specific platform integrations/interfaces in **their respective repositories** through Feature Pull Requests (where accepted) and link out to existing integrations here. This helps shift maintenance towards relevant and active communities.
+We decided to keep specific platform integrations/interfaces in **their respective repositories** through Feature Pull Requests (where accepted) or Forked Repositories and link out to existing integrations here. This keeps dependencies and workspaces seperated.
 
 ### Current Integrations
 
@@ -119,3 +125,5 @@ Eprint = {arXiv:2502.07380},
 [1] Sidharth Talia, Matt Schmittle, Alexander Lambert, Alexander Spitzer, Christoforos Mavrogiannis, and Siddhartha S. Srinivasa.Demonstrating HOUND: A Low-cost Research Platform for High-speed Off-road Underactuated Nonholonomic Driving, July 2024.URL http://arxiv.org/abs/2311.11199.arXiv:2311.11199 [cs].
 
 [2] Siddhartha S. Srinivasa, Patrick Lancaster, Johan Michalove, Matt Schmittle, Colin Summers, Matthew Rockett, Rosario Scalise, Joshua R. Smith, Sanjiban Choudhury, Christoforos Mavrogiannis, and Fereshteh Sadeghi.MuSHR: A Low-Cost, Open-Source Robotic Racecar for Education and Research, December 2023.URL http://arxiv.org/abs/1908.08031.arXiv:1908.08031 [cs].
+
+[3] Matthew O’Kelly, Hongrui Zheng, Dhruv Karthik, and Rahul Mangharam. F1TENTH: An Open-source Eval- uation Environment for Continuous Control and Reinforcement Learning. In Proceedings of the NeurIPS 2019 Competition and Demonstration Track, pages 77– 89. PMLR, August 2020. URL https://proceedings.mlr. press/v123/o-kelly20a.html. ISSN: 2640-3498.

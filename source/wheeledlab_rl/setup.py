@@ -15,7 +15,7 @@ INSTALL_REQUIRES = [
     # NOTE: Add dependencies
     "psutil",
     "rich",
-    "pyav"
+    "av"
 ]
 
 # Installation operation
