@@ -38,20 +38,6 @@ class CustomVideoRecorder(VideoRecorder):
             output.mux(packet)
             output.close()
 
-            ######## Below adopted from original library (memory leak) ##############
-            # try:
-            #     from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
-            # except ImportError as e:
-            #     from gymnasium import error
-            #     raise error.DependencyNotInstalled(
-            #         "moviepy is not installed, run `pip install moviepy`"
-            #     ) from e
-
-            # clip = ImageSequenceClip(self.recorded_frames, fps=self.frames_per_sec)
-            # moviepy_logger = None if self.disable_logger else "bar"
-            # clip.write_videofile(self.path, logger=moviepy_logger)
-            #########################################################################
-
             # log video to wandb
             if self.wandb:
                 wandb.log({"Video": wandb.Video(self.path)}, commit=False)
