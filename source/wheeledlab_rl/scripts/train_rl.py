@@ -76,6 +76,8 @@ def main(run_cfg: RunConfig): # TODO: Add SB3 config support
             "video_length": log_cfg.video_length,
             "disable_logger": True,
             "enable_wandb": not log_cfg.no_wandb,
+            "video_resolution": log_cfg.video_resolution,
+            "video_crf": log_cfg.video_crf,
         }
         print("[INFO] Recording videos during training.")
         print_dict(video_kwargs, nesting=4)
