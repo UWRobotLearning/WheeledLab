@@ -78,8 +78,8 @@ class CustomRecordVideo(RecordVideo):
         name_prefix: str = "rl-video",
         disable_logger: bool = False,
         enable_wandb: bool = True,
-        video_resolution: tuple[int, int] = (480, 640),
-        video_crf: int = 23,
+        video_resolution: tuple[int, int] = (1280, 720),
+        video_crf: int = 30,
     ):
         if enable_wandb and wandb.run.name is None:
             raise ValueError("wandb must be initialized before wrapping.")
