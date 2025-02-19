@@ -13,17 +13,30 @@ Environments, assets, workflow for open-source mobile robotics, integrated with 
 
 [Website](https://uwrobotlearning.github.io/WheeledLab/) | [Paper](https://arxiv.org/abs/2502.07380)
 
-## Installing IsaacLab
+## Installing IsaacLab (~30 min)
 
-WheeledLab is built atop of Isaac Lab. It is open-source and installation instructions can be found here:
+WheeledLab is built atop of Isaac Lab. If you do not yet have Isaac Lab installed, it is open-source and installation instructions can be found below: 
 
 https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html
 
-## Installing WheeledLab
+If you already have IsaacLab you can skip this and instead head [here](#create-new-isaaclab-conda-environment) to set up a new conda environment for this repository.
+
+
+### Create New IsaacLab Conda Environment
+
+We recommend setting up a new [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) environment to include both `IsaacLab` packages and `WheeledLab` packages. You can do this using Isaac Lab's convenient setup scripts:
+
+```bash
+cd <IsaacLab>
+./isaaclab.sh --conda WL
+conda activate WL
+```
+
+## Installing WheeledLab (~5  min)
 
 ```bash
 # Activate the conda environment that was created via the IsaacLab setup.
-conda activate <your IsaacLab env here>
+conda activate <your IsaacLab env here> # 'WL' if you followed instructions above
 
 git clone git@github.com:UWRobotLearning/WheeledLab.git
 cd WheeledLab/source
@@ -34,6 +47,8 @@ pip install -e wheeledlab_rl
 ```
 
 ## Training Quick Start
+
+Training runs can take a couple hours to produce a transferable policy. 
 
 To start a drifting run:
 
@@ -53,19 +68,22 @@ To start a visual run:
 python source/wheeledlab_rl/scripts/train_rl.py --headless -r RSS_VISUAL_CONFIG 
 ```
 
-See details about training in the `wheeledlab_rl` [README.md](source/wheeledlab_rl/docs/README.md)
+Though optional (and free), we strongly advise using [Weights & Biases](https://wandb.ai/site/) (`wandb`) to record and track training status. Logging to `wandb` is turned on by default. If you would like to disable it, add `train.log.no_wandb=True` to the CLI arguments.
+
+See more details about training in the `wheeledlab_rl` [README.md](source/wheeledlab_rl/docs/README.md)
 
 ## Deployment
 
-We decided to keep specific platform integrations/interfaces in **their respective repositories** through Feature Pull Requests (where accepted) or Forked Repositories and link out to existing integrations here. This keeps dependencies and workspaces seperated.
+A separate repository is maintained for existing integrations and deployments. See https://github.com/UWRobotLearning/RealLab for code. 
+
 
 ### Current Integrations
 
-1. HOUND [1] - https://github.com/prl-mushr/hound_core
-2. MuSHR [2] - https://github.com/prl-mushr/mushr
+1. HOUND [1] - https://github.com/UWRobotLearning/RealLab/tree/hound
+2. MuSHR [2] - https://github.com/UWRobotLearning/RealLab/tree/mushr
 3. F1Tenth [3] - (coming soon)
 
-If you have an integration or request for a platform not seen above, please contact us or contribute! We'd love to see how this work generalizes (or what it takes to generalize).
+If you have an integration or request for a platform not seen above, please contact us or consider contributing!
 
 ## Setting Up VSCode
 
