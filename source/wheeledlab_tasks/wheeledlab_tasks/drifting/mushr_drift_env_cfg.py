@@ -15,7 +15,7 @@ from isaaclab.managers import (
     SceneEntityCfg,
 )
 from wheeledlab.envs.mdp import increase_reward_weight_over_time
-from wheeledlab_assets import MUSHR_SUS_CFG
+from wheeledlab_assets import MUSHR_SUS_2WD_CFG
 from wheeledlab_tasks.common import BlindObsCfg, MushrRWDActionCfg
 
 from .mdp import reset_root_state_along_track
@@ -56,7 +56,7 @@ class MushrDriftSceneCfg(InteractiveSceneCfg):
 
     terrain = DriftTerrainImporterCfg()
 
-    robot: ArticulationCfg = MUSHR_SUS_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    robot: ArticulationCfg = MUSHR_SUS_2WD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
     # lights
     light = AssetBaseCfg(

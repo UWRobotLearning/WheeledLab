@@ -21,10 +21,23 @@ HOUND_ACTUATOR_CFG = {
     ),
 }
 
-## HOUND Configuration with suspension
-HOUND_SUS_ACTUATOR_CFG = {
-    "steering_joints": HOUND_ACTUATOR_CFG["steering_joints"],
-    "throttle_joints": HOUND_ACTUATOR_CFG["throttle_joints"].replace(
+HOUND_SUS_ACTUATOR_CFG = { # 4WD
+    **HOUND_ACTUATOR_CFG,
+    "suspension": ImplicitActuatorCfg(
+        joint_names_expr=[".*_suspension"],
+        effort_limit=None, # Passive joint
+        velocity_limit=None,
+        stiffness=1e8,
+        damping=0.,
+        friction=.5,
+    ),
+}
+
+## HOUND 2WD Configuration with suspension
+HOUND_SUS_2WD_ACTUATOR_CFG = {
+    "steering_joints": HOUND_SUS_ACTUATOR_CFG["steering_joints"],
+    "suspension": HOUND_SUS_ACTUATOR_CFG["suspension"],
+    "throttle_joints": HOUND_SUS_ACTUATOR_CFG["throttle_joints"].replace(
         joint_names_expr=["back_.*throttle"],
         effort_limit=0.5, # More torque for two wheel drive
     ),
@@ -36,13 +49,4 @@ HOUND_SUS_ACTUATOR_CFG = {
         damping=0.0,
         friction=0.0,
     ),
-    "suspension": ImplicitActuatorCfg(
-        joint_names_expr=[".*_suspension"],
-        effort_limit=None, # Passive joint
-        velocity_limit=None,
-        stiffness=1e8,
-        damping=0.,
-        friction=.5,
-    ),
 }
-

@@ -2,7 +2,7 @@ from isaaclab.assets import ArticulationCfg
 import isaaclab.sim as sim_utils
 
 from . import WHEELEDLAB_ASSETS_DATA_DIR
-from .hound import HOUND_ACTUATOR_CFG, HOUND_SUS_ACTUATOR_CFG
+from .hound import HOUND_ACTUATOR_CFG, HOUND_SUS_ACTUATOR_CFG, HOUND_SUS_2WD_ACTUATOR_CFG
 
 _ZERO_INIT_STATES = ArticulationCfg.InitialStateCfg(
     pos=(0.0, 0.0, 0.0),
@@ -53,4 +53,8 @@ MUSHR_SUS_CFG = MUSHR_CFG.replace(
         }
     ),
     actuators = HOUND_SUS_ACTUATOR_CFG,
+)
+
+MUSHR_SUS_2WD_CFG = MUSHR_SUS_CFG.replace(
+    actuators = HOUND_SUS_2WD_ACTUATOR_CFG,
 )
