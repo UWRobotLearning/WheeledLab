@@ -1,13 +1,12 @@
 """
 Play a policy in an environment and record the data.
 
-example usage:
+Usage:
 
-python play/record_policy.py --policy-type PPO --env-name Isaac-MITCar-v0 --policy-path /path/to/policy --log-dir /path/to/log
+python scripts/play_policy.py -p <path-to-run> -sd --video
 
-loading from RSL run:
+This command will save data and record a video of the playback using an existing run folder.
 
-python play/record_policy.py --rl-algo-lib rsl --load-run <run_name>
 """
 
 ###################################
