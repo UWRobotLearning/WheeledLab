@@ -3,7 +3,7 @@ Play a policy in an environment and record the data.
 
 Usage:
 
-python scripts/play_policy.py -p <path-to-run> -sd --video
+python play_policy.py -p <path-to-run> -sd --video
 
 This command will save data and record a video of the playback using an existing run folder.
 
@@ -56,16 +56,34 @@ from wheeledlab_rl.configs import RunConfig
 from wheeledlab_rl.utils import ClipAction
 
 
+# Resolve paths
 FROM_RUN = args_cli.run_path is not None
-if FROM_RUN:
+if FROM_RUN: # Load paths for run folder
+
+    # Load run config
     path_to_run_cfg_pkl = os.path.join(args_cli.run_path, "run_config.pkl")
     run_cfg: RunConfig = load_pickle(path_to_run_cfg_pkl) # load_yaml does not work on slices
     run_agent_cfg = run_cfg.agent
     task = run_cfg.env_setup.task_name if args_cli.task is None else args_cli.task
     agent_entry_point = None
+
+    # Get policy path
+    chkpt = args_cli.checkpoint if args_cli.checkpoint is not None else ".*"
+    fp = os.path.abspath(args_cli.run_path)
+    run_dirname = os.path.dirname(fp)
+    run_folder = os.path.basename(fp)
+    policy_resume_path = get_checkpoint_path(log_path=run_dirname, run_dir=run_folder,
+                                        other_dirs=["models"], checkpoint=chkpt)
+
+    # Set playback directory to be in run folder
+    playback_dir = os.path.join(args_cli.run_path, "playback")
+
 else:
+
     task = args_cli.task
     agent_entry_point = "rsl_rl_cfg_entry_point" # rsl is the only supported library for now
+    playback_dir = args_cli.log_dir
+    policy_resume_path = args_cli.policy_path
 
 
 @hydra_task_config(task, agent_entry_point)
@@ -73,11 +91,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg): # TODO: Add SB3 config suppo
 
     if agent_cfg is None:
         agent_cfg = run_agent_cfg
-
-    if FROM_RUN:
-        playback_dir = os.path.join(args_cli.run_path, "playback")
-    else:
-        playback_dir = args_cli.log_dir
 
     if not os.path.exists(playback_dir):
         os.makedirs(playback_dir)
@@ -105,16 +118,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg): # TODO: Add SB3 config suppo
     ############################################
     ########### BEGIN PLAYBACK SETUP ###########
     ############################################
-
-    if FROM_RUN:
-        chkpt = args_cli.checkpoint if args_cli.checkpoint is not None else ".*"
-        fp = os.path.abspath(args_cli.run_path)
-        run_dirname = os.path.dirname(fp)
-        run_folder = os.path.basename(fp)
-        policy_resume_path = get_checkpoint_path(log_path=run_dirname, run_dir=run_folder,
-                                            other_dirs=["models"], checkpoint=chkpt)
-    else:
-        policy_resume_path = args_cli.policy_path
 
     env.action_space.low = -1.
     env.action_space.high = 1.
