@@ -22,6 +22,7 @@ class LogConfig:
     no_checkpoints: bool = False                        # Disable saving checkpoints
     checkpoint_every: int = 1000                        # Save checkpoint every n updates
     no_wandb: bool = False                              # Disable wandb logging
+    wandb_project: str = "WheeledLab"                   # Wandb project name
     test_mode: bool = False                             # Test mode (disable logging, wandb, video, checkpoints). Overrides other flags
     model_save_dirname: str = "models"                  # Path to save the model under log_dir
     video_resolution: tuple[int, int] = (1280, 720)     # Resolution of the recorded video, Width x Height

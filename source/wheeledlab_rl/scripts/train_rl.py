@@ -16,6 +16,7 @@ import gymnasium as gym
 import os
 
 from isaaclab.utils.dict import print_dict
+from isaaclab.utils.io import dump_yaml, dump_pickle
 from isaaclab_tasks.utils import get_checkpoint_path
 from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
 
@@ -46,7 +47,7 @@ def main(run_cfg: RunConfig): # TODO: Add SB3 config support
     if not log_cfg.no_wandb:
         import wandb
         run = wandb.init(
-            project="IRL",
+            project=log_cfg.wandb_project,
         )
         log_cfg.run_name = wandb.run.name
 
@@ -56,6 +57,11 @@ def main(run_cfg: RunConfig): # TODO: Add SB3 config support
     ## UPDATE CONFIGS WANDB ##
     if not log_cfg.no_wandb:
         wandb.config.update(run_cfg.to_dict())
+
+    # Save the config file
+    if not log_cfg.no_log:
+        dump_yaml(os.path.join(log_cfg.run_log_dir, "run_config.yaml"), run_cfg)
+        dump_pickle(os.path.join(log_cfg.run_log_dir, "run_config.pkl"), run_cfg)
 
     ############################
     #### CREATE ENVIRONMENT ####
