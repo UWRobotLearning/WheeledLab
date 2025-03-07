@@ -20,7 +20,7 @@ from collections import deque
 
 
 class OnPolicyRunner(runners.OnPolicyRunner):
-    ''' Override for logging purposes '''
+    """Override for logging purposes"""
 
     def __init__(self, env, agent_cfg, log_cfg, device="cpu"):
         super().__init__(env, agent_cfg, log_cfg.run_log_dir, device)
@@ -36,8 +36,12 @@ class OnPolicyRunner(runners.OnPolicyRunner):
         if not self.no_log and self.logger_type == "wandb":
             from rsl_rl.utils.wandb_utils import WandbSummaryWriter
 
-            self.writer = WandbSummaryWriter(log_dir=self.log_dir, flush_secs=10, cfg=self.cfg)
-            self.writer.log_config(self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg)
+            self.writer = WandbSummaryWriter(
+                log_dir=self.log_dir, flush_secs=10, cfg=self.cfg
+            )
+            self.writer.log_config(
+                self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg
+            )
 
         if init_at_random_ep_len:
             self.env.episode_length_buf = torch.randint_like(
@@ -51,8 +55,12 @@ class OnPolicyRunner(runners.OnPolicyRunner):
         ep_infos = []
         rewbuffer = deque(maxlen=100)
         lenbuffer = deque(maxlen=100)
-        cur_reward_sum = torch.zeros(self.env.num_envs, dtype=torch.float, device=self.device)
-        cur_episode_length = torch.zeros(self.env.num_envs, dtype=torch.float, device=self.device)
+        cur_reward_sum = torch.zeros(
+            self.env.num_envs, dtype=torch.float, device=self.device
+        )
+        cur_episode_length = torch.zeros(
+            self.env.num_envs, dtype=torch.float, device=self.device
+        )
 
         start_iter = self.current_learning_iteration
         tot_iter = start_iter + num_learning_iterations
@@ -67,7 +75,9 @@ class OnPolicyRunner(runners.OnPolicyRunner):
                         raise ValueError("NaN in actions")
                     obs = self.obs_normalizer(obs)
                     if "critic" in infos["observations"]:
-                        critic_obs = self.critic_obs_normalizer(infos["observations"]["critic"])
+                        critic_obs = self.critic_obs_normalizer(
+                            infos["observations"]["critic"]
+                        )
                     else:
                         critic_obs = obs
                     obs, critic_obs, rewards, dones = (
@@ -89,8 +99,12 @@ class OnPolicyRunner(runners.OnPolicyRunner):
                         cur_reward_sum += rewards
                         cur_episode_length += 1
                         new_ids = (dones > 0).nonzero(as_tuple=False)
-                        rewbuffer.extend(cur_reward_sum[new_ids][:, 0].cpu().numpy().tolist())
-                        lenbuffer.extend(cur_episode_length[new_ids][:, 0].cpu().numpy().tolist())
+                        rewbuffer.extend(
+                            cur_reward_sum[new_ids][:, 0].cpu().numpy().tolist()
+                        )
+                        lenbuffer.extend(
+                            cur_episode_length[new_ids][:, 0].cpu().numpy().tolist()
+                        )
                         cur_reward_sum[new_ids] = 0
                         cur_episode_length[new_ids] = 0
 
@@ -101,7 +115,13 @@ class OnPolicyRunner(runners.OnPolicyRunner):
                 start = stop
                 self.alg.compute_returns(critic_obs)
 
-            mean_value_loss, mean_surrogate_loss = self.alg.update()
+            (
+                mean_value_loss,
+                mean_surrogate_loss,
+                mean_entropy,
+                mean_rnd_loss,
+                mean_symmetry_loss,
+            ) = self.alg.update()
             stop = time.time()
             learn_time = stop - start
             self.current_learning_iteration = it
