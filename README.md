@@ -15,12 +15,27 @@ Environments, assets, workflow for open-source mobile robotics, integrated with 
 
 ## Installing IsaacLab (~30 min)
 
-WheeledLab is built atop Isaac Lab. If you do not yet have Isaac Lab installed, it is open-source and installation instructions can be found below: 
+WheeledLab is built atop Isaac Lab. If you do not yet have Isaac Lab installed, it is open-source and installation instructions for Isaac Sim v4.5.0 and Isaac Lab v2.0.2 can be found below:
 
-https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html
+```bash
+# Create a conda environment named env_isaaclab and install Isaac Sim v4.5.0 in it:
+conda create -n env_isaaclab python=3.10
+conda activate env_isaaclab
+pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121 # Or `pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu118` for CUDA 11
+pip install --upgrade pip
+pip install 'isaacsim[all,extscache]==4.5.0' --extra-index-url https://pypi.nvidia.com
+
+# Install Isaac Lab v2.0.2 (make sure you have build dependencies first, e.g. `sudo apt install cmake build-essential` on ubuntu)
+git clone --branch v2.0.2 https://github.com/isaac-sim/IsaacLab.git
+./isaaclab.sh -i
+
+# Downgrade gymnasium to <v1.0
+pip install gymnasium==0.29.1
+```
+
+Source: https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html
 
 If you already have IsaacLab you can skip this and instead head [here](#create-new-isaaclab-conda-environment) to set up a new conda environment for this repository.
-
 
 ### Create New IsaacLab Conda Environment
 
@@ -33,7 +48,7 @@ conda activate WL
 ./isaaclab.sh -i
 ```
 
-## Installing WheeledLab (~5  min)
+## Installing WheeledLab (~5 min)
 
 ```bash
 # Activate the conda environment that was created via the IsaacLab setup.
@@ -49,24 +64,24 @@ pip install -e wheeledlab_rl
 
 ## Training Quick Start
 
-Training runs can take a couple hours to produce a transferable policy. 
+Training runs can take a couple hours to produce a transferable policy.
 
 To start a drifting run:
 
 ```bash
-python source/wheeledlab_rl/scripts/train_rl.py --headless -r RSS_DRIFT_CONFIG 
+python source/wheeledlab_rl/scripts/train_rl.py --headless -r RSS_DRIFT_CONFIG
 ```
 
 To start a elevation run:
 
 ```bash
-python source/wheeledlab_rl/scripts/train_rl.py --headless -r RSS_ELEV_CONFIG 
+python source/wheeledlab_rl/scripts/train_rl.py --headless -r RSS_ELEV_CONFIG
 ```
 
 To start a visual run:
 
 ```bash
-python source/wheeledlab_rl/scripts/train_rl.py --headless -r RSS_VISUAL_CONFIG 
+python source/wheeledlab_rl/scripts/train_rl.py --headless -r RSS_VISUAL_CONFIG
 ```
 
 Though optional (and free), we strongly advise using [Weights & Biases](https://wandb.ai/site/) (`wandb`) to record and track training status. Logging to `wandb` is turned on by default. If you would like to disable it, add `train.log.no_wandb=True` to the CLI arguments.
@@ -75,8 +90,7 @@ See more details about training in the `wheeledlab_rl` [README.md](source/wheele
 
 ## Deployment
 
-A separate repository is maintained for existing integrations and deployments. See https://github.com/UWRobotLearning/RealLab for code. 
-
+A separate repository is maintained for existing integrations and deployments. See https://github.com/UWRobotLearning/RealLab for code.
 
 ### Current Integrations
 
@@ -93,23 +107,23 @@ STRONGLY advised.
 
 0. Find where your `IsaacLab` directory currently is. We'll refer to it as `<IsaacLab>` in this section. Move the VSCode tools to this workspace.
 
-    ```bash
-    cd <WheeledLab>
-    cp -r <IsaacLab>/.vscode/tools ./.vscode/
-    cp -r <IsaacLab>/.vscode/*.json ./.vscode/
-    ```
+   ```bash
+   cd <WheeledLab>
+   cp -r <IsaacLab>/.vscode/tools ./.vscode/
+   cp -r <IsaacLab>/.vscode/*.json ./.vscode/
+   ```
 
 1. Change `.vscode/tasks.json` line 11
 
-    ```json
-    "command": "${workspaceFolder}/../IsaacLab/isaaclab.sh -p ${workspaceFolder}/.vscode/tools/setup_vscode.py"
-    ```
+   ```json
+   "command": "${workspaceFolder}/../IsaacLab/isaaclab.sh -p ${workspaceFolder}/.vscode/tools/setup_vscode.py"
+   ```
 
-    to
+   to
 
-    ```json
-    "command": "<IsaacLabDir>/isaaclab.sh -p ${workspaceFolder}/.vscode/tools/setup_vscode.py"
-    ```
+   ```json
+   "command": "<IsaacLabDir>/isaaclab.sh -p ${workspaceFolder}/.vscode/tools/setup_vscode.py"
+   ```
 
 2. `Ctrl` + `Shift` + `P` to bring up the VSCode command palette. type `Tasks:Run Task` or type until you see it show up and highlight it and press `Enter`.
 3. Click on `setup_python_env`. Follow the prompts until you're able to run the task. You should see a console at the bottom and the status of the task.
