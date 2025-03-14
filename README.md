@@ -15,6 +15,8 @@ Environments, assets, workflow for open-source mobile robotics, integrated with 
 
 ## Installing IsaacLab (~30 min)
 
+Note: Only use this pip installation approach if you're on Ubuntu 22.04+ or Windows. For Ubuntu 20.04, install from the binaries. [link](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html)
+
 WheeledLab is built atop Isaac Lab. If you do not yet have Isaac Lab installed, it is open-source and installation instructions for Isaac Sim v4.5.0 and Isaac Lab v2.0.2 can be found below:
 
 ```bash
@@ -125,6 +127,7 @@ STRONGLY advised.
 2. `Ctrl` + `Shift` + `P` to bring up the VSCode command palette. type `Tasks:Run Task` or type until you see it show up and highlight it and press `Enter`.
 3. Click on `setup_python_env`. Follow the prompts until you're able to run the task. You should see a console at the bottom and the status of the task.
 4. If successful, you should now have `.vscode/{settings.json, launch.json}` in your `<WheeledLab>` repo and `settings.json` should have a populated list of paths under the `"python.analysis.extraPaths"` key.
+5. Make sure you at least have Microsoft's Python extension installed for intellisense to work. 
 
 ### If it still doesn't work
 
