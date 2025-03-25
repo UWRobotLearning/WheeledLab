@@ -20,9 +20,9 @@ Note: Only use this pip installation approach if you're on Ubuntu 22.04+ or Wind
 WheeledLab is built atop Isaac Lab. If you do not yet have Isaac Lab installed, it is open-source and installation instructions for Isaac Sim v4.5.0 and Isaac Lab v2.0.2 can be found below:
 
 ```bash
-# Create a conda environment named env_isaaclab and install Isaac Sim v4.5.0 in it:
-conda create -n env_isaaclab python=3.10
-conda activate env_isaaclab
+# Create a conda environment named WL and install Isaac Sim v4.5.0 in it:
+conda create -n WL python=3.10
+conda activate WL
 pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121 # Or `pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu118` for CUDA 11
 pip install --upgrade pip
 pip install 'isaacsim[all,extscache]==4.5.0' --extra-index-url https://pypi.nvidia.com
