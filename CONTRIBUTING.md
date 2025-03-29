@@ -25,8 +25,6 @@ You can include this information in bullet points or sub-headings:
 
 # Feature Request 
 
-We are accepting feature requests, but they aren't the highest priority currently. 
-
 You can use this template: 
 
 - Purpose of feature

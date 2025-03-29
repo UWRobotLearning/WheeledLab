@@ -13,7 +13,7 @@ Environments, assets, workflow for open-source mobile robotics, integrated with 
 
 [Website](https://uwrobotlearning.github.io/WheeledLab/) | [Paper](https://arxiv.org/abs/2502.07380)
 
-## Installing IsaacLab (~30 min)
+## Installing IsaacLab (~20 min)
 
 Note: Only use this pip installation approach if you're on Ubuntu 22.04+ or Windows. For Ubuntu 20.04, install from the binaries. [link](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html)
 
@@ -60,6 +60,8 @@ pip install -e wheeledlab_tasks
 pip install -e wheeledlab_assets
 pip install -e wheeledlab_rl
 ```
+
+After this, we recommend [Setting Up VSCode](https://github.com/UWRobotLearning/WheeledLab?tab=readme-ov-file#training-quick-start).
 
 ## Training Quick Start
 
