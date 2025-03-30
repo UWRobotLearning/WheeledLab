@@ -115,13 +115,7 @@ class OnPolicyRunner(runners.OnPolicyRunner):
                 start = stop
                 self.alg.compute_returns(critic_obs)
 
-            (
-                mean_value_loss,
-                mean_surrogate_loss,
-                mean_entropy,
-                mean_rnd_loss,
-                mean_symmetry_loss,
-            ) = self.alg.update()
+            loss_dict = self.alg.update()
             stop = time.time()
             learn_time = stop - start
             self.current_learning_iteration = it

@@ -15,7 +15,8 @@ INSTALL_REQUIRES = [
     # NOTE: Add dependencies
     "psutil",
     "rich",
-    "av"
+    "av",
+    "rsl-rl-lib>=2.3.0",
 ]
 
 # Installation operation
