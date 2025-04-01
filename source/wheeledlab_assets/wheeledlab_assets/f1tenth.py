@@ -3,7 +3,7 @@ from isaaclab.actuators import ImplicitActuatorCfg, DCMotorCfg
 from isaaclab.assets import ArticulationCfg
 
 # Hardcoded path to the F1Tenth USD asset (we assume the file is named f1tenth.usd)
-USD_PATH = "source/wheeledlab_assets/data/Robots/F1Tenth/f1tenth.usd"
+USD_PATH = "source/wheeledlab_assets/data/Robots/F1TENTH/f1tenth.usd"
 
 # F1Tenth 4WD actuator configuration.
 # For 4WD, all throttle joints (front and back) are active.
