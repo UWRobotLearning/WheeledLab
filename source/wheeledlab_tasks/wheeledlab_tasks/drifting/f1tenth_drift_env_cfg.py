@@ -146,6 +146,8 @@ class F1Tenth4WDActionCfg(Mushr4WDActionCfg):
         steering_joint_names=[
             "left_wheel_rotator", "right_wheel_rotator",
         ],
+        base_length=0.365,    
+        base_width=0.284,
         asset_name="robot",
     )
     # (Base kinematic parameters like wheelbase, width, wheel_radius, 
