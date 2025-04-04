@@ -137,7 +137,6 @@ F1TenthDriftTerminationsCfg = mdp.DriftTerminationsCfg
 @configclass
 class F1Tenth4WDActionCfg(Mushr4WDActionCfg):
     """Action configuration for F1Tenth 4WD, using RCCar4WDActionCfg with F1Tenth's joint names."""
-    # Replace Mushr's joint names with F1Tenth's steering and throttle joint names&#8203;:contentReference[oaicite:1]{index=1}&#8203;:contentReference[oaicite:2]{index=2}
     throttle_steer = Mushr4WDActionCfg.throttle_steer.replace(
         wheel_joint_names=[
             "left_wheel_back", "right_wheel_back",
@@ -148,10 +147,10 @@ class F1Tenth4WDActionCfg(Mushr4WDActionCfg):
         ],
         base_length=0.365,    
         base_width=0.284,
+        wheel_radius=0.05,
         asset_name="robot",
     )
-    # (Base kinematic parameters like wheelbase, width, wheel_radius, 
-    # and scaling factors are reused from Mushr4WDActionCfg)
+
 
 ######################
 ###### RL ENV ########
