@@ -160,7 +160,7 @@ class F1TenthDriftRLEnvCfg(ManagerBasedRLEnvCfg):
     """RL environment configuration for drifting task with the F1Tenth robot."""
     # Environment settings
     seed: int = 42
-    num_envs: int = 1024
+    num_envs: int = 256
     env_spacing: float = 0.0
 
     # MDP Components
