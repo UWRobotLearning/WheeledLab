@@ -46,3 +46,26 @@ class Mushr4WDActionCfg:
         bounding_strategy="clip",
         asset_name="robot",
     )
+
+@configclass
+class F1Tenth4WDActionCfg:
+    """Action configuration for F1Tenth 4WD, using RCCar4WDActionCfg with F1Tenth's joint names."""
+    throttle_steer = RCCar4WDActionCfg(
+        wheel_joint_names=[
+            "left_wheel_back",
+            "right_wheel_back",
+            "left_wheel_front",
+            "right_wheel_front",
+        ],
+        steering_joint_names=[
+            "left_wheel_rotator",
+            "right_wheel_rotator",
+        ],
+        base_length=0.365,
+        base_width=0.284,
+        wheel_radius=0.05,
+        scale=(3.0, 0.488),
+        no_reverse=True,
+        bounding_strategy="clip",
+        asset_name="robot",
+    )

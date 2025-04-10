@@ -367,7 +367,6 @@ class DriftTerminationsCfg:
 
 @configclass
 class MushrDriftRLEnvCfg(ManagerBasedRLEnvCfg):
-    """Configuration for the cartpole environment."""
 
     seed: int = 42
     num_envs: int = 1024

@@ -2,8 +2,7 @@ import isaaclab.sim as sim_utils
 from isaaclab.actuators import ImplicitActuatorCfg, DCMotorCfg
 from isaaclab.assets import ArticulationCfg
 
-# Hardcoded path to the F1Tenth USD asset (we assume the file is named f1tenth.usd)
-USD_PATH = "source/wheeledlab_assets/data/Robots/F1TENTH/f1tenth.usd"
+from . import WHEELEDLAB_ASSETS_DATA_DIR
 
 # F1Tenth 4WD actuator configuration.
 # For 4WD, all throttle joints (front and back) are active.
@@ -25,14 +24,6 @@ F1TENTH_4WD_ACTUATOR_CFG = {
         damping=1100.0,
         friction=0.0,
     ),
-    "suspension": ImplicitActuatorCfg(
-        joint_names_expr=[".*_suspension"],
-        effort_limit=None,
-        velocity_limit=None,
-        stiffness=5e7,       # Lower stiffness for a more springy suspension
-        damping=0.0,         # Lower shock oil weight implies minimal damping
-        friction=0.6,
-    ),
 }
 
 # Initial state configuration for F1Tenth.
@@ -52,7 +43,7 @@ _ZERO_INIT_STATES = ArticulationCfg.InitialStateCfg(
 # Overall configuration tying together the asset, physics, and initial state.
 F1TENTH_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path=USD_PATH,
+        usd_path=f"{WHEELEDLAB_ASSETS_DATA_DIR}/Robots/F1TENTH/f1tenth.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             rigid_body_enabled=True,
             max_linear_velocity=1000.0,
@@ -72,18 +63,3 @@ F1TENTH_CFG = ArticulationCfg(
     init_state=_ZERO_INIT_STATES,
     actuators=F1TENTH_4WD_ACTUATOR_CFG,
 )
-
-class F1Tenth:
-    """
-    F1Tenth robot integration for WheeledLab.
-
-    """
-    def __init__(self, prim_path="/World/F1Tenth", **kwargs):
-        self.prim_path = prim_path
-        # Use the 4WD actuator configuration
-        self.cfg = F1TENTH_CFG.replace(**kwargs)
-        self.asset_path = USD_PATH
-
-    def spawn(self):
-        """Spawn the F1Tenth model into the simulation at the specified prim path."""
-        return sim_utils.spawn_articulation(self.cfg, prim_path=self.prim_path)
