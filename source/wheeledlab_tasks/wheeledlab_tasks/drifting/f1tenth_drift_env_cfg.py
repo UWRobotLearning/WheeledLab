@@ -81,13 +81,13 @@ class F1TenthDriftEventsRandomCfg(mushr_drift_cfg.DriftEventsRandomCfg):
 
 def turn_left_go_right_f1(env, ang_vel_thresh: float = torch.pi/4):
     """
-    Reward component: turning wheels left while car's angular velocity is to the right (and vice versa).
-    Adapted for F1Tenth (uses steering joints named "*_rotator" instead of "*_steer").
+    Reward component: turning wheels left while the car's angular velocity is to the right (and vice versa).
+    Adapted for F1Tenth (uses steering joints named "rotator_left/right" instead of the previous naming convention).
     Similar to Mushr's turn_left_go_right.
     """
     asset = env.scene[SceneEntityCfg("robot").name]
-    # Find steering joint indices (F1Tenth uses "rotator" joints for steering)
-    steer_joints = asset.find_joints(".*_rotator")[0]
+    # Updated regex: now matches "rotator_left" and "rotator_right"
+    steer_joints = asset.find_joints("rotator_.*")[0]
     steer_joint_pos = mdp.joint_pos(env)[..., steer_joints].mean(dim=-1)
     ang_vel = mdp.base_ang_vel(env)[..., 2]
     ang_vel = torch.clamp(ang_vel, max=ang_vel_thresh, min=-ang_vel_thresh)
