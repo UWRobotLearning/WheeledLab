@@ -8,7 +8,7 @@ from . import WHEELEDLAB_ASSETS_DATA_DIR
 # For 4WD, all throttle joints (front and back) are active.
 F1TENTH_4WD_ACTUATOR_CFG = {
     "steering_joints": ImplicitActuatorCfg(
-        joint_names_expr=[".*_rotator"],
+        joint_names_expr=["rotator_(left|right)"],
         velocity_limit=10.0,    # F1Tenth steering is slightly slower than Hound
         effort_limit=2.5,
         stiffness=120.0,
@@ -16,7 +16,7 @@ F1TENTH_4WD_ACTUATOR_CFG = {
         friction=0.0,
     ),
     "throttle_joints": DCMotorCfg(
-        joint_names_expr=[".*wheel_(back|front)"],  # Matches all throttle joints (all four wheels)
+        joint_names_expr=[".*wheel_(back|front)_.*"],  # Matches all throttle joints (e.g. wheel_back_left, wheel_front_right, etc.)
         saturation_effort=1.0,
         effort_limit=0.25,   # Adjusted for the 3s VXL-3s motor/ESC
         velocity_limit=400.0,  # Reduced speed compared to a 4s system
@@ -30,13 +30,12 @@ F1TENTH_4WD_ACTUATOR_CFG = {
 _ZERO_INIT_STATES = ArticulationCfg.InitialStateCfg(
     pos=(0.0, 0.0, 0.0),
     joint_pos={
-        "left_wheel_rotator": 0.0,
-        "right_wheel_rotator": 0.0,
-        "left_wheel_back": 0.0,
-        "right_wheel_back": 0.0,
-        "left_wheel_front": 0.0,
-        "right_wheel_front": 0.0,
-        # If there are additional throttle joints for the back wheels, they will also match ".*wheel_(back|front)"
+        "rotator_left": 0.0,
+        "rotator_right": 0.0,
+        "wheel_back_left": 0.0,
+        "wheel_back_right": 0.0,
+        "wheel_front_left": 0.0,
+        "wheel_front_right": 0.0,
     },
 )
 
@@ -63,3 +62,4 @@ F1TENTH_CFG = ArticulationCfg(
     init_state=_ZERO_INIT_STATES,
     actuators=F1TENTH_4WD_ACTUATOR_CFG,
 )
+

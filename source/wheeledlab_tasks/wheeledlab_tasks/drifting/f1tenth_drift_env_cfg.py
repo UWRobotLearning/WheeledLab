@@ -54,7 +54,7 @@ class F1TenthDriftEventsRandomCfg(mushr_drift_cfg.DriftEventsRandomCfg):
         func=mdp.randomize_actuator_gains,
         mode="startup",
         params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names=[".*wheel_(back|front)"]),
+            "asset_cfg": SceneEntityCfg("robot", joint_names=["wheel_(back|front)_.*"]),
             "damping_distribution_params": (10.0, 50.0),
             "operation": "abs",
         },
