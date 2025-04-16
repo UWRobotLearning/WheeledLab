@@ -23,7 +23,7 @@ import gymnasium as gym
 
 import wheeledlab_tasks
 
-def main(task_name: str="Isaac-MushrDriftRL-v0", num_envs: int = 16, num_steps: int = 1000):
+def main(task_name: str="Isaac-MushrDriftRL-v0", num_envs: int = 1, num_steps: int = 1000):
     env_cfg = parse_env_cfg(task_name, num_envs=num_envs)
     env = gym.make(task_name, cfg=env_cfg)
 

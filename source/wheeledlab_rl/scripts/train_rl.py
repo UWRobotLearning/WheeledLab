@@ -5,7 +5,7 @@
 from wheeledlab_rl.startup import startup
 import argparse
 parser = argparse.ArgumentParser(description="Train an RL Agent in WheeledLab.")
-parser.add_argument('-r', "--run-config-name", type=str, default="RSS_DRIFT_CONFIG", help="Run in headless mode.")
+parser.add_argument('-r', "--run-config-name", type=str, default="RSS_TEST", help="Run in headless mode.")
 simulation_app, args_cli = startup(parser=parser)
 
 #######################

@@ -5,9 +5,28 @@ from wheeledlab_rl.configs import (
 )
 
 @configclass
+class RSS_TEST(RslRlRunConfig):
+    env_setup = EnvSetup(
+        num_envs=1,
+        task_name="Isaac-MushrDriftRL-v0"
+    )
+    train = RLTrainConfig(
+        num_iterations=100,
+        rl_algo_lib="rsl",
+        rl_algo_class="ppo",
+        log=LogConfig(
+            video_interval=15000
+        ),
+    )
+    agent_setup = AgentSetup(
+        entry_point="rsl_rl_cfg_entry_point"
+    )
+
+
+@configclass
 class RSS_DRIFT_CONFIG(RslRlRunConfig):
     env_setup = EnvSetup(
-        num_envs=1024,
+        num_envs=1,
         task_name="Isaac-MushrDriftRL-v0"
     )
     train = RLTrainConfig(

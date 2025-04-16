@@ -142,6 +142,26 @@ class DriftEventsRandomCfg(DriftEventsCfg):
         },
     )
 
+    # push_robots_x_test = EventTerm( # test event term
+    # func=mdp.push_by_setting_velocity,
+    # mode="interval",
+    # interval_range_s=(0.1, 0.1),
+    # params={
+    #     "velocity_range":{
+    #         "x": (10, 10)
+    #     },
+    # },
+    # )
+    add_residual = EventTerm(
+        func=mdp.add_residual_dynamics_with_MLP,
+        mode="interval",
+        interval_range_s=(0.025, 0.025),
+        params={
+            "MLP_model_path" : "/home/tongo/WheeledLab/source/wheeledlab_assets/wheeledlab_assets/MLP_model/dummy_residual_dynamics_mlp.pt"
+        },
+    )
+
+
     add_base_mass = EventTerm(
         func=mdp.randomize_rigid_body_mass,
         mode="startup",
