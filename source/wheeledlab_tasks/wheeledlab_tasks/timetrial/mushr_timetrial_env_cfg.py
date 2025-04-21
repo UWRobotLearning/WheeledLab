@@ -30,12 +30,13 @@ from wheeledlab_assets import WHEELEDLAB_ASSETS_DATA_DIR
 from wheeledlab_assets.mushr import MUSHR_SUS_CFG
 from wheeledlab_tasks.common import Mushr4WDActionCfg
 
-from .utils import create_geometry, generate_random_poses, TraversabilityHashmapUtil
+from .utils import create_track, generate_random_poses, TraversabilityHashmapUtil
 from . import mdp_sensors
 from .mdp import reset_root_state
 
+
 @configclass
-class VisualObsCfg:
+class TimeTrialObsCfg:
     """Observation specifications for the environment."""
     @configclass
     class PolicyCfg(ObsGroup):
@@ -65,45 +66,44 @@ class InitialPoseCfg:
     ang_vel: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
 @configclass
-class VisualTerrainImporterCfg(TerrainImporterCfg):
+class TimeTrialTerrainImporterCfg(TerrainImporterCfg):
     # map generation parameters
     row_spacing = 0.10
     col_spacing = 0.10
     spacing = (row_spacing, col_spacing)
 
-    num_rows = 500
-    num_cols = 500
-    map_size = (num_rows, num_cols)
+    # num_rows = 500
+    # num_cols = 500
+    # map_size = (num_rows, num_cols)
 
-    # environments are generated in a grid
-    env_num_rows = 100
-    env_num_cols = 100
-    env_size = (env_num_rows, env_num_cols)
+    # # environments are generated in a grid
+    # env_num_rows = 100
+    # env_num_cols = 100
+    # env_size = (env_num_rows, env_num_cols)
 
-    # sub group size
-    group_num_rows = 50
-    group_num_cols = 50
-    sub_group_size = (group_num_rows, group_num_cols)
-    # num walkers for each sub group
-    num_walkers = 1
+    # # sub group size
+    # group_num_rows = 50
+    # group_num_cols = 50
+    # sub_group_size = (group_num_rows, group_num_cols)
+    # # num walkers for each sub group
+    # num_walkers = 1
 
     ####################################
     # Debugging map
-    # num_rows = 50
-    # num_cols = 50
-    # map_size = (num_rows, num_cols)
+    num_rows = 130
+    num_cols = 130
+    map_size = (num_rows, num_cols)
 
-    # # # environments are generated in a grid
-    # env_num_rows = 5
-    # env_num_cols = 5
-    # env_size = (env_num_rows, env_num_cols)
+    # # environments are generated in a grid
+    env_num_rows = 40
+    env_num_cols = 40
+    env_size = (env_num_rows, env_num_cols)
 
-    # # # sub group size
-    # group_num_rows = 1
-    # group_num_cols = 1 
-    # sub_group_size = (group_num_rows, group_num_cols)
-    # # # num walkers for each sub group
-    # num_walkers = 1
+    # # sub group size
+    group_num_rows = 1
+    group_num_cols = 1 
+    sub_group_size = (group_num_rows, group_num_cols)
+    num_walkers = 1
     ####################################
 
     # whether to sample colors
@@ -119,7 +119,8 @@ class VisualTerrainImporterCfg(TerrainImporterCfg):
     traversability_hashmap is a 2D numpy array of traversability values, 1.0 or 0.0
     shape: [num_rows, num_cols]
     """
-    traversability_hashmap = create_geometry(
+
+    traversability_hashmap = create_track(
         file_name, map_size, spacing, env_size, sub_group_size, num_walkers, color_sampling
     )
 
@@ -208,9 +209,9 @@ class VisualTerrainImporterCfg(TerrainImporterCfg):
         return x_idx, y_idx
 
 @configclass
-class MushrVisualSceneCfg(InteractiveSceneCfg):
+class MushrTimeTrialSceneCfg(InteractiveSceneCfg):
     """Configuration for a Mushr car Scene with racetrack terrain and Sensors."""
-    terrain = VisualTerrainImporterCfg()
+    terrain = TimeTrialTerrainImporterCfg()
     ground = AssetBaseCfg(
         prim_path="/World/base",
         spawn = sim_utils.GroundPlaneCfg(size=(terrain.width, terrain.height),
@@ -255,7 +256,7 @@ class MushrVisualSceneCfg(InteractiveSceneCfg):
 ###### EVENTS #######
 #####################
 @configclass
-class VisualEventsCfg:
+class TimeTrialEventsCfg:
     # on startup
 
     reset_root_state = EventTerm(
@@ -264,7 +265,7 @@ class VisualEventsCfg:
     )
 
 @configclass
-class VisualEventsRandomCfg(VisualEventsCfg):
+class TimeTrialEventsRandomCfg(TimeTrialEventsCfg):
     change_wheel_friction = EventTerm(
         func=mdp.randomize_rigid_body_material,
         mode="startup",
@@ -309,12 +310,12 @@ def is_traversable(env):
 def traversable_reward(env):
     poses = mdp.root_pos_w(env)[..., :2]
     traversability = TraversabilityHashmapUtil().get_traversability(poses)
-    return torch.where(traversability, 1., -1.)
+    return torch.where(traversability, 1., -10.)
 
 def bool_is_not_traversable(env):
     num_episodes = env.common_step_counter // env.max_episode_length
     # delay the penalty for the first 300 episodes
-    if num_episodes < 1000:
+    if num_episodes < 300:
         return torch.zeros(env.num_envs, device=env.device) == 1
 
     traversability = is_traversable(env)
@@ -370,9 +371,9 @@ def low_speed_penalty(env, low_speed_thresh: float=0.3):
 def forward_vel(env):
     return mdp.base_lin_vel(env)[:, 0]
 
-####### Visual Environment #######
+####### TimeTrial Environment #######
 @configclass
-class VisualRewardsCfg:
+class TimeTrialRewardsCfg:
     # """Reward terms for the MDP."""
     traversablility = RewTerm(
         func=traversable_reward,
@@ -402,14 +403,14 @@ def roll_over(env):
     return torch.logical_and(roll < torch.pi / 2, roll > -torch.pi / 2)
 
 @configclass
-class VisualTerminationsCfg:
+class TimeTrialTerminationsCfg:
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
     out_range = DoneTerm(
         func=out_of_map,
     )
     
 @configclass
-class MushrVisualRLEnvCfg(ManagerBasedRLEnvCfg):
+class MushrTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the cartpole environment."""
 
     seed: int = 42
@@ -417,13 +418,13 @@ class MushrVisualRLEnvCfg(ManagerBasedRLEnvCfg):
     env_spacing: float = 0.
 
     # Reset config
-    events: VisualEventsCfg = VisualEventsCfg()
+    events: TimeTrialEventsCfg = TimeTrialEventsCfg()
     actions: Mushr4WDActionCfg = Mushr4WDActionCfg()
 
     # MDP settings
-    observations: VisualObsCfg = VisualObsCfg()
-    rewards: VisualRewardsCfg = VisualRewardsCfg()
-    terminations: VisualTerminationsCfg = VisualTerminationsCfg()
+    observations: TimeTrialObsCfg = TimeTrialObsCfg()
+    rewards: TimeTrialRewardsCfg = TimeTrialRewardsCfg()
+    terminations: TimeTrialTerminationsCfg = TimeTrialTerminationsCfg()
 
 
     def __post_init__(self):
@@ -439,23 +440,23 @@ class MushrVisualRLEnvCfg(ManagerBasedRLEnvCfg):
         self.episode_length_s = 10
 
         # Scene settings
-        self.scene = MushrVisualSceneCfg(
+        self.scene = MushrTimeTrialSceneCfg(
             num_envs=self.num_envs, env_spacing=self.env_spacing,
         )
 
 @configclass
-class MushrVisualRLRandomEnvCfg(MushrVisualRLEnvCfg):
-    events: VisualEventsRandomCfg = VisualEventsRandomCfg()
+class MushrTimeTrialRLRandomEnvCfg(MushrTimeTrialRLEnvCfg):
+    events: TimeTrialEventsRandomCfg = TimeTrialEventsRandomCfg()
 
 ######################
 ###### PLAY ENV ######
 ######################
 
 @configclass
-class MushrVisualPlayEnvCfg(MushrVisualRLEnvCfg):
+class MushrTimeTrialPlayEnvCfg(MushrTimeTrialRLEnvCfg):
     """no terminations"""
 
-    events: VisualEventsCfg = VisualEventsRandomCfg(
+    events: TimeTrialEventsCfg = TimeTrialEventsRandomCfg(
         reset_root_state = EventTerm(
             func=reset_root_state,
             params={
@@ -466,8 +467,8 @@ class MushrVisualPlayEnvCfg(MushrVisualRLEnvCfg):
         )
     )
 
-    rewards: VisualRewardsCfg = None
-    terminations: VisualTerminationsCfg = None
+    rewards: TimeTrialRewardsCfg = None
+    terminations: TimeTrialTerminationsCfg = None
 
     def __post_init__(self):
         super().__post_init__()

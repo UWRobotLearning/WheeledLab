@@ -20,7 +20,7 @@ THROTTLE_MLP_MOD_CFG = ActuatorNetMLPModCfg(
     torque_scale=1.0,
     input_order="pos_vel",  # or "vel_pos" depending on your model
     input_idx=[0, 1],  # Current and previous timesteps (adjust as needed)
-    # DC motor parameters (used for clipping)
+    # w parameters (used for clipping)
     saturation_effort=1.05,
     effort_limit=0.25,
     velocity_limit=450.0,
@@ -38,7 +38,7 @@ HOUND_ACTUATOR_CFG = {
         damping=10.,
         friction=0.,
     ),
-    "throttle_joints": THROTTLE_MLP_MOD_CFG,
+    "throttle_joints": THROTTLE_DCMOTOR_CFG,
 }
 
 HOUND_SUS_ACTUATOR_CFG = { # 4WD
