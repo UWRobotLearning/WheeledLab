@@ -14,47 +14,73 @@ import wheeledlab_tasks.elevation.config.agents.mushr as mushr_elevation_agents
 import wheeledlab_tasks.timetrial.config.agents.mushr as mushr_timetrial_agents
 
 gym.register(
-    id="Isaac-MushrDriftRL-v0",
-    entry_point='isaaclab.envs:ManagerBasedRLEnv',
-    disable_env_checker=True,
-    kwargs={
-        "env_cfg_entry_point":MushrDriftRLEnvCfg,
-        "rsl_rl_cfg_entry_point": f"{mushr_drift_agents.__name__}.rsl_rl_ppo_cfg:MushrPPORunnerCfg",
-        "play_env_cfg_entry_point": MushrDriftPlayEnvCfg
-    }
-)
-
-
-gym.register(
-    id="Isaac-MushrVisualRL-v0",
-    entry_point='isaaclab.envs:ManagerBasedRLEnv',
-    disable_env_checker=True,
-    kwargs={
-        "env_cfg_entry_point":MushrVisualRLEnvCfg,
-        "rsl_rl_cfg_entry_point": f"{mushr_visual_agents.__name__}.rsl_rl_ppo_cfg:MushrPPORunnerCfg",
-        "play_env_cfg_entry_point": MushrVisualPlayEnvCfg
-    }
-)
-
-gym.register(
-    id="Isaac-MushrElevationRL-v0",
-    entry_point='isaaclab.envs:ManagerBasedRLEnv',
-    disable_env_checker=True,
-    kwargs={
-        "env_cfg_entry_point": MushrElevationRLEnvCfg,
-        "rsl_rl_cfg_entry_point": f"{mushr_elevation_agents.__name__}.rsl_rl_ppo_cfg:MushrPPORunnerCfg",
-        "play_env_cfg_entry_point": MushrElevationPlayEnvCfg
-    }
-)
-
-
-gym.register(
     id="Isaac-MushrTimeTrialRL-v0",
     entry_point='isaaclab.envs:ManagerBasedRLEnv',
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point":MushrTimeTrialRLEnvCfg,
-        "rsl_rl_cfg_entry_point": f"{mushr_timetrial_agents.__name__}.rsl_rl_ppo_cfg:MushrPPORunnerCfg",
+        "rsl_rl_cfg_entry_point": f"{mushr_drift_agents.__name__}.rsl_rl_ppo_cfg:MushrPPORunnerCfg",
         "play_env_cfg_entry_point": MushrTimeTrialPlayEnvCfg
     }
 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# gym.register(
+#     id="Isaac-MushrDriftRL-v0",
+#     entry_point='isaaclab.envs:ManagerBasedRLEnv',
+#     disable_env_checker=True,
+#     kwargs={
+#         "env_cfg_entry_point":MushrDriftRLEnvCfg,
+#         "rsl_rl_cfg_entry_point": f"{mushr_drift_agents.__name__}.rsl_rl_ppo_cfg:MushrPPORunnerCfg",
+#         "play_env_cfg_entry_point": MushrDriftPlayEnvCfg
+#     }
+# )
+
+
+# gym.register(
+#     id="Isaac-MushrVisualRL-v0",
+#     entry_point='isaaclab.envs:ManagerBasedRLEnv',
+#     disable_env_checker=True,
+#     kwargs={
+#         "env_cfg_entry_point":MushrVisualRLEnvCfg,
+#         "rsl_rl_cfg_entry_point": f"{mushr_visual_agents.__name__}.rsl_rl_ppo_cfg:MushrPPORunnerCfg",
+#         "play_env_cfg_entry_point": MushrVisualPlayEnvCfg
+#     }
+# )
+
+# gym.register(
+#     id="Isaac-MushrElevationRL-v0",
+#     entry_point='isaaclab.envs:ManagerBasedRLEnv',
+#     disable_env_checker=True,
+#     kwargs={
+#         "env_cfg_entry_point": MushrElevationRLEnvCfg,
+#         "rsl_rl_cfg_entry_point": f"{mushr_elevation_agents.__name__}.rsl_rl_ppo_cfg:MushrPPORunnerCfg",
+#         "play_env_cfg_entry_point": MushrElevationPlayEnvCfg
+#     }
+# )
+
+

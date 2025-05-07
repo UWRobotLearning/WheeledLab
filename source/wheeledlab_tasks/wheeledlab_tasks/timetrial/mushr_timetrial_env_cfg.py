@@ -30,20 +30,24 @@ from wheeledlab_assets import WHEELEDLAB_ASSETS_DATA_DIR
 from wheeledlab_assets.mushr import MUSHR_SUS_CFG
 from wheeledlab_tasks.common import Mushr4WDActionCfg
 
-from .utils import create_track, generate_random_poses, TraversabilityHashmapUtil
+from .utils import create_oval, create_maps_from_png, generate_random_poses, TraversabilityHashmapUtil, WaypointsUtil
 from . import mdp_sensors
 from .mdp import reset_root_state
 
+import omni.usd
+
+
+
 
 @configclass
-class TimeTrialObsCfg:
+class MushrTimeTrialObsCfg:
     """Observation specifications for the environment."""
     @configclass
     class PolicyCfg(ObsGroup):
         """
         [vx, vy, vz, wx, wy, wz, action1(vel), action2(steering)]
         """
-        camera = ObsTerm(func=mdp_sensors.camera_data_rgb_flattened_aug, params={"sensor_cfg":SceneEntityCfg("camera")})
+        # lidar = ObsTerm(func=mdp_sensors.lidar_ranges, params={"sensor_cfg":SceneEntityCfg("lidar")})
         base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-.1, n_max=.1))
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-.1, n_max=.1))
         last_action = ObsTerm(
@@ -65,64 +69,67 @@ class InitialPoseCfg:
     lin_vel: tuple[float, float, float] = (0.0, 0.0, 0.0)
     ang_vel: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
+
+##############################
+###### TERRAIN / TRACK #######
+##############################
+
 @configclass
-class TimeTrialTerrainImporterCfg(TerrainImporterCfg):
+class MushrTimeTrialTerrainImporterCfg(TerrainImporterCfg):
     # map generation parameters
-    row_spacing = 0.10
-    col_spacing = 0.10
-    spacing = (row_spacing, col_spacing)
-
-    # num_rows = 500
-    # num_cols = 500
-    # map_size = (num_rows, num_cols)
-
-    # # environments are generated in a grid
-    # env_num_rows = 100
-    # env_num_cols = 100
-    # env_size = (env_num_rows, env_num_cols)
-
-    # # sub group size
-    # group_num_rows = 50
-    # group_num_cols = 50
-    # sub_group_size = (group_num_rows, group_num_cols)
-    # # num walkers for each sub group
-    # num_walkers = 1
-
-    ####################################
-    # Debugging map
-    num_rows = 130
-    num_cols = 130
-    map_size = (num_rows, num_cols)
-
-    # # environments are generated in a grid
-    env_num_rows = 40
-    env_num_cols = 40
-    env_size = (env_num_rows, env_num_cols)
-
-    # # sub group size
-    group_num_rows = 1
-    group_num_cols = 1 
-    sub_group_size = (group_num_rows, group_num_cols)
-    num_walkers = 1
-    ####################################
-
-    # whether to sample colors
-    color_sampling = False
-
-    width = num_rows * row_spacing
-    height = num_cols * col_spacing
 
     # generate a colored plane geometry
     file_name = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'rgb_maps', time.strftime("%Y%m%d_%H%M%S.usd"))
+    # '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps/'
+    map_name = 'f'
+    traversability_hashmap, waypoints, spacing_meters, map_size_pixels = create_maps_from_png(map_name, file_name, 0.25)
+
+    # Grid resolution
+    
+    # row_spacing = 0.10
+    # col_spacing = 0.10
+    # spacing = (row_spacing, col_spacing)
+
+    spacing = spacing_meters
+    row_spacing, col_spacing = spacing
+    ####################################
+    # Debugging map size
+    # num_rows = 100
+    # num_cols = num_rows
+
+    num_rows, num_cols = map_size_pixels
+    map_size = (num_rows+1, num_cols+1)
+
+    # environments size are generated in a grid
+    
+    # env_num_rows = 500
+    # env_num_cols = env_num_rows
+
+    # env_size = (env_num_rows, env_num_cols)
+    env_size = map_size
+    # # sub group size
+    # group_num_rows = 1
+    # group_num_cols = 1 
+    # sub_group_size = (group_num_rows, group_num_cols)
+    # num_walkers = 1
+    ####################################
+
+    # whether to sample colors
+    # color_sampling = False
+
+    width = num_rows * row_spacing
+    height = num_cols * col_spacing
     
     """
     traversability_hashmap is a 2D numpy array of traversability values, 1.0 or 0.0
     shape: [num_rows, num_cols]
     """
 
-    traversability_hashmap = create_track(
-        file_name, map_size, spacing, env_size, sub_group_size, num_walkers, color_sampling
-    )
+    # Defined logic for driveable track/out of bounds
+    # traversability_hashmap, env_boundaries = create_oval(
+    #     file_name, map_size, spacing, env_size
+    # )
+
 
     prim_path = "/World/plane"
     terrain_type="usd"
@@ -135,7 +142,7 @@ class TimeTrialTerrainImporterCfg(TerrainImporterCfg):
         dynamic_friction=2.0,
     )
     debug_vis=False
-
+    
     def generate_poses_from_init_points(self, env : ManagerBasedEnv, env_ids : torch.Tensor):
         # temp = self.init_points[0][0]
         # self.init_points = [[(temp[0], temp[1]) for _ in range(len(row))] for row in self.init_points]
@@ -178,10 +185,10 @@ class TimeTrialTerrainImporterCfg(TerrainImporterCfg):
 
     def generate_random_poses(self, num_poses):
         # generate random initial poses with margin
-        init_poses = generate_random_poses(num_poses, self.row_spacing, self.col_spacing, self.traversability_hashmap, margin=0.1)
+        init_poses = generate_random_poses(num_poses, self.row_spacing, self.col_spacing, self.traversability_hashmap, self.waypoints, margin=0.1)
         valid_init_poses = [
             InitialPoseCfg(
-                pos=(x, y, 0.1),
+                pos=(x, y, 0.02),
                 rot_euler_xyz_deg=(0., 0., angle)
             ) for x, y, angle in init_poses
         ]
@@ -211,7 +218,9 @@ class TimeTrialTerrainImporterCfg(TerrainImporterCfg):
 @configclass
 class MushrTimeTrialSceneCfg(InteractiveSceneCfg):
     """Configuration for a Mushr car Scene with racetrack terrain and Sensors."""
-    terrain = TimeTrialTerrainImporterCfg()
+    terrain = MushrTimeTrialTerrainImporterCfg()
+    # waypoint_loader = WaypointLoader(map_name="f")
+    # Add ground config (ground is slightly below terrain)
     ground = AssetBaseCfg(
         prim_path="/World/base",
         spawn = sim_utils.GroundPlaneCfg(size=(terrain.width, terrain.height),
@@ -224,30 +233,22 @@ class MushrTimeTrialSceneCfg(InteractiveSceneCfg):
                                          ),
         )
     )
+    # # Add light configuration
+    # light = AssetBaseCfg(
+    #     prim_path="/World/light",
+    #     spawn=sim_utils.DistantLightCfg(
+    #         color=(1.0, 1.0, 1.0),
+    #         intensity=5000.0,
+    #     )
+    # )
+
     robot: ArticulationCfg = MUSHR_SUS_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
     ground.init_state.pos = (0.0, 0.0, -1e-4)
 
-    # Default Mushr Camera Parameters with TiledCameraCfg
-    camera = TiledCameraCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/mushr_nano/camera_link/camera",
-        update_period=0.1,
-        height=60,
-        width=80,
-        data_types=["rgb"],
-        spawn=sim_utils.PinholeCameraCfg(
-            focal_length=1.9299999475479126,
-            horizontal_aperture=3.8959999084472656,
-            vertical_aperture=2.453000068664551,
-            clipping_range=(0.01, 1e2),
-            ),
-        offset=TiledCameraCfg.OffsetCfg(pos=(0.08, 0.0, 0.0),
-                                   rot=tuple(R.from_euler('xyz', [-90.0, 0.0, -90.0], degrees=True).as_quat().tolist()),
-                                   convention="ros"),
-        debug_vis=False,
-    )
     def __post_init__(self):
         """Post intialization."""
         super().__post_init__()
+
         self.robot.init_state = self.robot.init_state.replace(
             pos=(0.0, 0.0, 0.0)
         )
@@ -256,7 +257,7 @@ class MushrTimeTrialSceneCfg(InteractiveSceneCfg):
 ###### EVENTS #######
 #####################
 @configclass
-class TimeTrialEventsCfg:
+class MushrTimeTrialEventsCfg:
     # on startup
 
     reset_root_state = EventTerm(
@@ -265,7 +266,7 @@ class TimeTrialEventsCfg:
     )
 
 @configclass
-class TimeTrialEventsRandomCfg(TimeTrialEventsCfg):
+class MushrTimeTrialEventsRandomCfg(MushrTimeTrialEventsCfg):
     change_wheel_friction = EventTerm(
         func=mdp.randomize_rigid_body_material,
         mode="startup",
@@ -315,7 +316,7 @@ def traversable_reward(env):
 def bool_is_not_traversable(env):
     num_episodes = env.common_step_counter // env.max_episode_length
     # delay the penalty for the first 300 episodes
-    if num_episodes < 300:
+    if num_episodes < 50:
         return torch.zeros(env.num_envs, device=env.device) == 1
 
     traversability = is_traversable(env)
@@ -361,7 +362,7 @@ def off_track(env, straight, corner_out_radius):
                 torch.where(poses[...,1] > 0,
                     torch.where((poses[...,1] - straight)**2 + poses[...,0]**2 > corner_out_radius**2, 1, 0),
                     torch.where((poses[...,1] + straight)**2 + poses[...,0]**2 > corner_out_radius**2, 1, 0)))
-    return penalty
+    return 
 
 def low_speed_penalty(env, low_speed_thresh: float=0.3):
     lin_speed = torch.norm(mdp.base_lin_vel(env), dim=-1)
@@ -371,18 +372,70 @@ def low_speed_penalty(env, low_speed_thresh: float=0.3):
 def forward_vel(env):
     return mdp.base_lin_vel(env)[:, 0]
 
-####### TimeTrial Environment #######
+def progress_rew(env):
+    progress = progress_waypoint_bool(env)
+    return torch.where(progress, 1.0, 0.0)
+
+def progress_waypoint_bool(env):
+    # Safe access to buffer with fallback
+    if not hasattr(env, '_last_waypoint_indices'):
+        env._last_waypoint_indices = torch.zeros(env.num_envs, 
+                                               dtype=torch.long,
+                                               device=env.device)
+    
+    poses = mdp.root_pos_w(env)
+    position_xy = poses[:, 0:2]
+    waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, device=env.device)[:, 0:2]
+    
+    # Get current closest
+    current_idx, _ = find_nearest_waypoint(waypoints, position_xy)
+    progress_bool = current_idx > env._last_waypoint_indices
+    
+    # Initialize if first run
+    if not hasattr(env, '_last_waypoint_indices'):
+        env._last_waypoint_indices = current_idx.clone()
+        return torch.zeros(env.num_envs, device=env.device)
+    env._last_waypoint_indices = current_idx.clone()
+
+    return progress_bool
+
+def find_nearest_waypoint(waypoints: torch.Tensor,  # Shape: [M, 2] - M waypoints
+                         positions: torch.Tensor, # [N,2] - N cars
+                         ) -> tuple[int, torch.Tensor]:
+    """
+    Finds closest waypoints for all cars, handling circular track wrapping.
+    If lookahead is None, searches all waypoints (accurate but slower).
+    With lookahead, only checks next K waypoints from current closest (faster).
+    """
+    M = waypoints.shape[0]
+    N = positions.shape[0]
+    
+    # First find rough closest without wrapping [N]
+    diffs = positions.unsqueeze(1) - waypoints.unsqueeze(0)  # [N,M,2]
+    dists = torch.norm(diffs, p=2, dim=2)  # [N,M]
+    closest_idx = torch.argmin(dists, dim=1)  # [N]
+    
+    return closest_idx, dists[torch.arange(N), closest_idx]
+
+
+
+####### MushrTimeTrial Environment #######
 @configclass
-class TimeTrialRewardsCfg:
+class MushrTimeTrialRewardsCfg:
     # """Reward terms for the MDP."""
     traversablility = RewTerm(
         func=traversable_reward,
-        weight=5.,
+        weight=1.,
     )
 
     vel_rew = RewTerm(
         func=forward_vel,
-        weight= 7.,
+        weight= 1.,
+    )
+
+    progress_rew = RewTerm(
+        func=progress_rew,
+        weight=1.,
     )
 
 ##########################
@@ -402,29 +455,75 @@ def roll_over(env):
     roll = euler_xyz_from_quat(mdp.root_quat_w(env))[0] - torch.pi
     return torch.logical_and(roll < torch.pi / 2, roll > -torch.pi / 2)
 
+def is_not_traversable(env):
+    poses = mdp.root_pos_w(env)[..., :2]
+    traversability = TraversabilityHashmapUtil().get_traversability(poses)
+
+    num_episodes = env.common_step_counter // env.max_episode_length
+    # delay the termination for the first 10 episodes
+    # if num_episodes < 10:
+    #     return torch.zeros(env.num_envs, device=env.device) == 1
+    
+    return torch.logical_not(traversability)
+
+def is_reverse(env):
+    reverse = reverse_waypoint_bool(env)
+    return reverse
+
+def reverse_waypoint_bool(env):
+    # Safe access to buffer with fallback
+    if not hasattr(env, '_last_waypoint_indices'):
+        env._last_waypoint_indices = torch.zeros(env.num_envs, 
+                                               dtype=torch.long,
+                                               device=env.device)
+    
+    poses = mdp.root_pos_w(env)
+    position_xy = poses[:, 0:2]
+    waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, device=env.device)[:, 0:2]
+    
+    # Get current closest
+    current_idx, _ = find_nearest_waypoint(waypoints, position_xy)
+    reverse_bool = current_idx < env._last_waypoint_indices
+    
+    # Initialize if first run
+    if not hasattr(env, '_last_waypoint_indices'):
+        env._last_waypoint_indices = current_idx.clone()
+        return torch.zeros(env.num_envs, device=env.device)
+    env._last_waypoint_indices = current_idx.clone()
+
+    return reverse_bool
+
 @configclass
-class TimeTrialTerminationsCfg:
+class MushrTimeTrialTerminationsCfg:
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
     out_range = DoneTerm(
         func=out_of_map,
     )
-    
+
+    non_traversable = DoneTerm(
+        func=is_not_traversable
+    )
+
+    reverse = DoneTerm(
+        func=is_reverse
+    )
+
 @configclass
 class MushrTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the cartpole environment."""
 
     seed: int = 42
-    num_envs: int = 1024
+    num_envs: int = 16
     env_spacing: float = 0.
 
     # Reset config
-    events: TimeTrialEventsCfg = TimeTrialEventsCfg()
+    events: MushrTimeTrialEventsCfg = MushrTimeTrialEventsCfg()
     actions: Mushr4WDActionCfg = Mushr4WDActionCfg()
 
     # MDP settings
-    observations: TimeTrialObsCfg = TimeTrialObsCfg()
-    rewards: TimeTrialRewardsCfg = TimeTrialRewardsCfg()
-    terminations: TimeTrialTerminationsCfg = TimeTrialTerminationsCfg()
+    observations: MushrTimeTrialObsCfg = MushrTimeTrialObsCfg()
+    rewards: MushrTimeTrialRewardsCfg = MushrTimeTrialRewardsCfg()
+    terminations: MushrTimeTrialTerminationsCfg = MushrTimeTrialTerminationsCfg()
 
 
     def __post_init__(self):
@@ -437,16 +536,33 @@ class MushrTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 10
 
         # Terminations config
-        self.episode_length_s = 10
+        self.episode_length_s = 15
 
         # Scene settings
         self.scene = MushrTimeTrialSceneCfg(
             num_envs=self.num_envs, env_spacing=self.env_spacing,
         )
 
+        # Set the environment class
+        self.env_class = MushrTimeTrialEnv
+
+
+class MushrTimeTrialEnv(ManagerBasedEnv):
+    def __init__(self, cfg: MushrTimeTrialRLEnvCfg, **kwargs):
+        # Initialize parent class first
+        super().__init__(cfg, **kwargs)
+        
+        # Then initialize your buffers
+        self._last_waypoint_indices = torch.zeros(self.num_envs, 
+                                                dtype=torch.long,
+                                                device=self.device)
+        self._current_progress = torch.zeros(self.num_envs,
+                                           device=self.device)
+
+
 @configclass
 class MushrTimeTrialRLRandomEnvCfg(MushrTimeTrialRLEnvCfg):
-    events: TimeTrialEventsRandomCfg = TimeTrialEventsRandomCfg()
+    events: MushrTimeTrialEventsRandomCfg = MushrTimeTrialEventsRandomCfg()
 
 ######################
 ###### PLAY ENV ######
@@ -456,7 +572,7 @@ class MushrTimeTrialRLRandomEnvCfg(MushrTimeTrialRLEnvCfg):
 class MushrTimeTrialPlayEnvCfg(MushrTimeTrialRLEnvCfg):
     """no terminations"""
 
-    events: TimeTrialEventsCfg = TimeTrialEventsRandomCfg(
+    events: MushrTimeTrialEventsCfg = MushrTimeTrialEventsRandomCfg(
         reset_root_state = EventTerm(
             func=reset_root_state,
             params={
@@ -467,8 +583,8 @@ class MushrTimeTrialPlayEnvCfg(MushrTimeTrialRLEnvCfg):
         )
     )
 
-    rewards: TimeTrialRewardsCfg = None
-    terminations: TimeTrialTerminationsCfg = None
+    rewards: MushrTimeTrialRewardsCfg = None
+    terminations: MushrTimeTrialTerminationsCfg = None
 
     def __post_init__(self):
         super().__post_init__()

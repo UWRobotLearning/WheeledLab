@@ -50,7 +50,7 @@ def design_scene():
 
     # spawn a usd file of a table into the scene
     cfg = MUSHR_SUS_CFG.spawn
-    cfg.func("/World/mushr", cfg, translation=(0.0, 0.0, 1.05))
+    cfg.func("/World/mushr", cfg, translation=(0.0, 0.0, 0.05))
 
 
 def main():
