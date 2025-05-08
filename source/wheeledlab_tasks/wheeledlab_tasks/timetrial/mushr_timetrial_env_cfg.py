@@ -30,13 +30,129 @@ from wheeledlab_assets import WHEELEDLAB_ASSETS_DATA_DIR
 from wheeledlab_assets.mushr import MUSHR_SUS_CFG
 from wheeledlab_tasks.common import Mushr4WDActionCfg
 
-from .utils import create_oval, create_maps_from_png, generate_random_poses, TraversabilityHashmapUtil, WaypointsUtil
+from .utils import create_maps_from_png, generate_random_poses, TraversabilityHashmapUtil, WaypointsUtil
 from . import mdp_sensors
 from .mdp import reset_root_state
 
 import omni.usd
 
 
+##############################
+###### OBSERVATION #######
+##############################
+
+def base_lin_vel_xy(env: ManagerBasedEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+    """Root linear velocity in the asset's root frame. 2D, only x and y"""
+    # extract the used quantities (to enable type-hinting)
+    asset: RigidObject = env.scene[asset_cfg.name]
+    return asset.data.root_lin_vel_b[:,0:2]
+
+def base_ang_vel_z(env: ManagerBasedEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+    """Root angular velocity in the asset's root frame. Only z, yaw rade"""
+    # extract the used quantities (to enable type-hinting)
+    asset: RigidObject = env.scene[asset_cfg.name]
+
+    return asset.data.root_ang_vel_b[:,2].unsqueeze(-1)
+
+def deviation_from_waypoints(
+    env: ManagerBasedEnv, 
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    lookahead: int = 10
+) -> torch.Tensor:
+    """Calculate signed lateral deviation from the reference waypoint path.
+    
+    Args:
+        env: The environment instance.
+        asset_cfg: Configuration for the robot asset.
+        lookahead: Number of waypoints to look ahead for track direction.
+        
+    Returns:
+        Tensor of signed deviations (positive = left of reference, negative = right).
+    """
+    # Get current state
+    asset = env.scene[asset_cfg.name]
+    pos_xy_world = asset.data.root_pos_w[:, :2]
+    
+    # Get waypoints (ensure float32 for consistency)
+    waypoints_xy_world = torch.tensor(
+        env.scene.terrain.cfg.waypoints, 
+        device=env.device,
+        dtype=torch.float32
+    )[:, :2]
+    
+    # Find nearest waypoint
+    current_idx, _ = find_nearest_waypoint(waypoints_xy_world, pos_xy_world)
+    current_waypoint = waypoints_xy_world[current_idx]
+    
+    # Get lookahead waypoint for track direction
+    next_idx = (current_idx + lookahead) % len(waypoints_xy_world)
+    next_waypoint = waypoints_xy_world[next_idx]
+    
+    # Vector from current waypoint to next waypoint (track direction)
+    track_dir = next_waypoint - current_waypoint
+    # Vector from current waypoint to car position
+    car_offset = pos_xy_world - current_waypoint
+    
+    # Cross product (track_dir × car_offset) determines left/right sign
+    cross_product = track_dir[:, 0] * car_offset[:, 1] - track_dir[:, 1] * car_offset[:, 0]
+    sign = torch.sign(cross_product)
+    
+    # Absolute distance to nearest waypoint (lateral deviation magnitude)
+    distance = torch.norm(car_offset, dim=1)
+    
+    # Signed lateral deviation (positive = left, negative = right)
+    signed_deviation = sign * distance
+    
+    return signed_deviation.unsqueeze(-1)
+
+def heading_error_from_waypoints(
+    env: ManagerBasedEnv, 
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    lookahead: int = 30
+) -> torch.Tensor:
+    """
+    Calculate heading error between car's current orientation and direction to lookahead waypoint.
+    
+    Args:
+        env: The environment instance
+        asset_cfg: Configuration for the robot asset
+        lookahead: Number of waypoints to look ahead (default 30)
+        
+    Returns:
+        Tensor of heading errors in radians (range [-π, π])
+    """
+    # Get current state
+    asset = env.scene[asset_cfg.name]
+    pos_xy_world = asset.data.root_pos_w[:, :2]
+    heading_w = asset.data.heading_w
+    
+    # Get waypoints (ensure float32 for consistency)
+    waypoints_xy_world = torch.tensor(
+        env.scene.terrain.cfg.waypoints, 
+        device=env.device,
+        dtype=torch.float32
+    )[:, :2]
+    
+    # Find nearest waypoint
+    current_idx, _ = find_nearest_waypoint(waypoints_xy_world, pos_xy_world)
+    
+    # Get lookahead waypoint (with circular buffer handling)
+    next_idx = (current_idx + lookahead) % len(waypoints_xy_world)
+    next_waypoint = waypoints_xy_world[next_idx]
+    
+    # Calculate desired heading vector
+    desired_heading_w = torch.atan2(
+        next_waypoint[:, 1] - pos_xy_world[:, 1],
+        next_waypoint[:, 0] - pos_xy_world[:, 0]
+    )
+    
+    # Calculate smallest angle difference (normalized to [-π, π])
+    heading_error = torch.atan2(
+        torch.sin(desired_heading_w - heading_w),
+        torch.cos(desired_heading_w - heading_w)
+    )
+    
+    return heading_error.unsqueeze(-1)
 
 
 @configclass
@@ -48,17 +164,26 @@ class MushrTimeTrialObsCfg:
         [vx, vy, vz, wx, wy, wz, action1(vel), action2(steering)]
         """
         # lidar = ObsTerm(func=mdp_sensors.lidar_ranges, params={"sensor_cfg":SceneEntityCfg("lidar")})
-        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-.1, n_max=.1))
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-.1, n_max=.1))
+        base_lin_vel_xy = ObsTerm(func=base_lin_vel_xy, noise=Unoise(n_min=-.1, n_max=.1))
+        base_ang_vel_z = ObsTerm(func=base_ang_vel_z, noise=Unoise(n_min=-.1, n_max=.1))
         last_action = ObsTerm(
             func=mdp.last_action,
             clip=(-1., 1.), # TODO: get from ClipAction wrapper
             noise=Unoise(-.1, .1)
         )
+        heading_error = ObsTerm(
+            func=heading_error_from_waypoints,
+            params={'lookahead': 30}
+        )
+        deviation_error = ObsTerm(
+            func=deviation_from_waypoints,
+            params={'lookahead': 10}
+        )
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
             self.concatenate_terms = True
+
 
     policy: PolicyCfg = PolicyCfg()
 
@@ -80,9 +205,9 @@ class MushrTimeTrialTerrainImporterCfg(TerrainImporterCfg):
 
     # generate a colored plane geometry
     file_name = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'rgb_maps', time.strftime("%Y%m%d_%H%M%S.usd"))
-    # '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps/'
+    maps_folder_path = '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps'    
     map_name = 'f'
-    traversability_hashmap, waypoints, spacing_meters, map_size_pixels = create_maps_from_png(map_name, file_name, 0.25)
+    traversability_hashmap, waypoints, spacing_meters, map_size_pixels = create_maps_from_png(maps_folder_path, map_name, file_name, 0.20)
 
     # Grid resolution
     
@@ -376,6 +501,10 @@ def progress_rew(env):
     progress = progress_waypoint_bool(env)
     return torch.where(progress, 1.0, 0.0)
 
+def reverse_pen(env):
+    reverse = reverse_waypoint_bool(env)
+    return torch.where(reverse, -1.0, 0.0)
+
 def progress_waypoint_bool(env):
     # Safe access to buffer with fallback
     if not hasattr(env, '_last_waypoint_indices'):
@@ -385,7 +514,7 @@ def progress_waypoint_bool(env):
     
     poses = mdp.root_pos_w(env)
     position_xy = poses[:, 0:2]
-    waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, device=env.device)[:, 0:2]
+    waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, device=env.device)[:,:2]
     
     # Get current closest
     current_idx, _ = find_nearest_waypoint(waypoints, position_xy)
@@ -430,14 +559,18 @@ class MushrTimeTrialRewardsCfg:
 
     vel_rew = RewTerm(
         func=forward_vel,
-        weight= 1.,
+        weight= 3.,
     )
 
     progress_rew = RewTerm(
         func=progress_rew,
-        weight=1.,
+        weight=3.,
     )
 
+    reverse_pen = RewTerm(
+        func=reverse_pen,
+        weight=3.,
+    )
 ##########################
 ###### TERMINATION #######
 ##########################
@@ -480,7 +613,7 @@ def reverse_waypoint_bool(env):
     poses = mdp.root_pos_w(env)
     position_xy = poses[:, 0:2]
     waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, device=env.device)[:, 0:2]
-    
+
     # Get current closest
     current_idx, _ = find_nearest_waypoint(waypoints, position_xy)
     reverse_bool = current_idx < env._last_waypoint_indices
