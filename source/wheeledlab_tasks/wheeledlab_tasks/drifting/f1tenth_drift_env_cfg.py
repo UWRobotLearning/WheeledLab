@@ -6,6 +6,7 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils import configclass
 from isaaclab.assets import ArticulationCfg, RigidObject, AssetBaseCfg
+
 from isaaclab.managers import (
     EventTermCfg as EventTerm,
     RewardTermCfg as RewTerm,
@@ -18,6 +19,8 @@ from wheeledlab.envs.mdp import increase_reward_weight_over_time
 from wheeledlab_assets import F1TENTH_CFG
 import wheeledlab_tasks.drifting.mushr_drift_env_cfg as mushr_drift_cfg
 from wheeledlab_tasks.common import BlindObsCfg, F1Tenth4WDActionCfg
+from .disable_lidar import disable_all_lidars
+
 from .mdp import reset_root_state_along_track
 
 ##############################
@@ -74,6 +77,13 @@ class F1TenthDriftEventsRandomCfg(mushr_drift_cfg.DriftEventsRandomCfg):
     )
     # (All other event terms such as wheel friction changes, pushes, etc.,
     # are inherited from DriftEventsRandomCfg without modification.)
+    
+
+    kill_lidar = EventTerm(
+        func=disable_all_lidars,
+        mode="startup",
+        params={}          
+    )
 
 ######################
 ###### REWARDS #######
