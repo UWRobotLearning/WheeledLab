@@ -200,10 +200,10 @@ def load_image_downsampled(visualization_scale, original_resolution, png_path):
 def set_stage_usd(file_path):
     try:
         stage = Usd.Stage.Open(file_path)
-        print('opening existing map')
+        print('[INFO]: Opening existing map')
     except:
         stage = Usd.Stage.CreateNew(file_path)
-        print('creating new map')
+        print('[INFO]: Creating new map')
         UsdGeom.SetStageMetersPerUnit(stage, UsdGeom.LinearUnits.meters)
         UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
         xform = UsdGeom.Xform.Define(stage, '/World')

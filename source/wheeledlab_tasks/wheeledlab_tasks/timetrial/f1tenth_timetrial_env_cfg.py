@@ -588,7 +588,7 @@ class F1TenthTimeTrialTerrainImporterCfg(TerrainImporterCfg):
     # map generation parameters
 
     # generate a colored plane geometry
-    MAP_NAME = 'f'
+    MAP_NAME = 'THETRACK'
     file_name = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', MAP_NAME+'.usd')
     maps_folder_path = '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps'    
     traversability_hashmap, waypoints, outer, inner, d_lat, psi_rad, kappa_radpm, vx_mps, spacing_meters, map_size_pixels = create_maps_from_png(maps_folder_path, MAP_NAME, file_name, visualization_scale=0.5)
@@ -726,8 +726,8 @@ class F1TenthTimeTrialSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.DistantLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
     )
 
-    # robot: AssetBaseCfg = F1TENTH_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-    robot: ArticulationCfg = MUSHR_SUS_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    robot: AssetBaseCfg = F1TENTH_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    # robot: ArticulationCfg = MUSHR_SUS_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
     ground.init_state.pos = (0.0, 0.0, -1e-4)
 
     def __post_init__(self):
@@ -816,28 +816,28 @@ class F1TenthTimeTrialEventsRandomCfg(F1TenthTimeTrialEventsCfg):
     # )
 
     # Override randomize_gains to target all four wheel motors (front and back)
-    randomize_gains = EventTerm(
-        func=mdp.randomize_actuator_gains,
-        mode="startup",
-        params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names=["wheel_(back|front)_.*"]),
-            "damping_distribution_params": (0.0, 0.0),
-            "operation": "abs",
-        },
-    )
+    # randomize_gains = EventTerm(
+    #     func=mdp.randomize_actuator_gains,
+    #     mode="startup",
+    #     params={
+    #         "asset_cfg": SceneEntityCfg("robot", joint_names=["wheel_(back|front)_.*"]),
+    #         "damping_distribution_params": (0.0, 0.0),
+    #         "operation": "abs",
+    #     },
+    # )
 
-    change_wheel_friction = EventTerm(
-        func=mdp.randomize_rigid_body_material,
-        mode="startup",
-        params={
-            "static_friction_range": (0.0, 0.0),
-            "dynamic_friction_range": (0.0, 0.0),
-            "restitution_range": (0.0, 0.0),
-            "num_buckets": 20,
-            "asset_cfg": SceneEntityCfg("robot", body_names="wheel.*"),
-            "make_consistent": True,
-        },
-    )
+    # change_wheel_friction = EventTerm(
+    #     func=mdp.randomize_rigid_body_material,
+    #     mode="startup",
+    #     params={
+    #         "static_friction_range": (0.0, 0.0),
+    #         "dynamic_friction_range": (0.0, 0.0),
+    #         "restitution_range": (0.0, 0.0),
+    #         "num_buckets": 20,
+    #         "asset_cfg": SceneEntityCfg("robot", body_names="wheel.*"),
+    #         "make_consistent": True,
+    #     },
+    # )
 
     kill_lidar = EventTerm(
         func=disable_all_lidars,
@@ -876,25 +876,25 @@ def bool_is_not_traversable(env):
 def is_traversable_speed_scaled(env):
     return is_traversable(env) * mdp.base_lin_vel(env)[:, 0]
 
-def is_traversable_wheels(env):
-    body_asset_cfg = SceneEntityCfg("robot", body_names=".*wheel_link")
-    body_asset_cfg.resolve(env.scene)
-    # B x num_body x 2
-    poses = env.scene[body_asset_cfg.name].data.body_pos_w[:, body_asset_cfg.body_ids][:, :, :2]
-    B, num_body = poses.shape[:2]
-    # terrain = env.scene[SceneEntityCfg("terrain").name]
-    traversability = TraversabilityHashmapUtil().get_traversability(poses.reshape(-1, 2)).reshape(B, num_body)
-    return torch.where(traversability == 1, 1., -5.).sum(dim=-1)
+# def is_traversable_wheels(env):
+#     body_asset_cfg = SceneEntityCfg("robot", body_names=".*wheel_link")
+#     body_asset_cfg.resolve(env.scene)
+#     # B x num_body x 2
+#     poses = env.scene[body_asset_cfg.name].data.body_pos_w[:, body_asset_cfg.body_ids][:, :, :2]
+#     B, num_body = poses.shape[:2]
+#     # terrain = env.scene[SceneEntityCfg("terrain").name]
+#     traversability = TraversabilityHashmapUtil().get_traversability(poses.reshape(-1, 2)).reshape(B, num_body)
+#     return torch.where(traversability == 1, 1., -5.).sum(dim=-1)
 
-def binary_is_traversable_wheels(env):
-    body_asset_cfg = SceneEntityCfg("robot", body_names=".*wheel_link")
-    body_asset_cfg.resolve(env.scene)
-    # B x num_body x 2
-    poses = env.scene[body_asset_cfg.name].data.body_pos_w[:, body_asset_cfg.body_ids][:, :, :2]
-    B, num_body = poses.shape[:2]
-    # terrain = env.scene[SceneEntityCfg("terrain").name]
-    traversability = TraversabilityHashmapUtil().get_traversability(poses.reshape(-1, 2)).reshape(B, num_body)
-    return torch.where(traversability == 1, 1., 0.).sum(dim=-1) == 0
+# def binary_is_traversable_wheels(env):
+#     body_asset_cfg = SceneEntityCfg("robot", body_names=".*wheel_link")
+#     body_asset_cfg.resolve(env.scene)
+#     # B x num_body x 2
+#     poses = env.scene[body_asset_cfg.name].data.body_pos_w[:, body_asset_cfg.body_ids][:, :, :2]
+#     B, num_body = poses.shape[:2]
+#     # terrain = env.scene[SceneEntityCfg("terrain").name]
+#     traversability = TraversabilityHashmapUtil().get_traversability(poses.reshape(-1, 2)).reshape(B, num_body)
+#     return torch.where(traversability == 1, 1., 0.).sum(dim=-1) == 0
 
 def upright_penalty(env, thresh_deg):
     rot_mat = math_utils.matrix_from_quat(mdp.root_quat_w(env))
@@ -1158,8 +1158,8 @@ class F1TenthTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
 
     # Reset config
     events: F1TenthTimeTrialEventsCfg = F1TenthTimeTrialEventsCfg()
-    actions: Mushr4WDActionCfg = Mushr4WDActionCfg()
-    # actions: F1Tenth4WDActionCfg = F1Tenth4WDActionCfg()
+    # actions: Mushr4WDActionCfg = Mushr4WDActionCfg()
+    actions: F1Tenth4WDActionCfg = F1Tenth4WDActionCfg()
 
     # MDP settings
     observations: F1TenthTimeTrialObsCfg = F1TenthTimeTrialObsCfg()
