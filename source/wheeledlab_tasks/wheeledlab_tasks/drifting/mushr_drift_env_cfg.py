@@ -29,7 +29,7 @@ CORNER_OUT_RADIUS = 2.0       # For termination
 LINE_RADIUS = 0.8             # For spawning and reward
 STRAIGHT = 0.8                # Shaping
 SLIP_THRESHOLD = 0.55         # (rad) For reward
-MAX_SPEED = 3.0               # (m/s) For action and reward
+MAX_SPEED = 10.0               # (m/s) For action and reward
 
 ###################
 ###### SCENE ######
@@ -350,7 +350,7 @@ class DriftCurriculumCfg:
         func=increase_reward_weight_over_time,
         params={
             "reward_term_name": "term_pens",
-            "increase": -1000.,
+            "increase": -100.,
             "episodes_per_increase": 50,
             "max_increases": 5,
         }

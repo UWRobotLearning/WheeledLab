@@ -121,6 +121,7 @@ class AckermannAction(ActionTerm):
         self._raw_actions[:] = actions
 
         if self._bounding_strategy == 'clip':
+            # actions[:,0] = torch.ones(actions.shape[0])
             self._processed_actions = torch.clip(actions, min=-1.0, max=1.0) * self._scale + self._offset
 
         elif self._bounding_strategy == 'tanh':

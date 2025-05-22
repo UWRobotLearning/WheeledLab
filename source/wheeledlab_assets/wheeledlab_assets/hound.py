@@ -4,29 +4,13 @@ from isaaclab.actuators import ImplicitActuatorCfg, DCMotorCfg, ActuatorNetMLPCf
 THROTTLE_DCMOTOR_CFG = DCMotorCfg(
         joint_names_expr=[".*throttle"],
         saturation_effort=1.05,
-        effort_limit=0.25,
+        # effort_limit=0.25,
+        effort_limit=0.28,
         velocity_limit=450.,
         stiffness=0,
         damping=1000.,
         friction=0.0,
     )
-
-# Define MLP actuator configuration for throttle joints
-THROTTLE_MLP_MOD_CFG = ActuatorNetMLPModCfg(
-    joint_names_expr=[".*throttle"],
-    network_file="/home/tongo/WheeledLab/source/wheeledlab_assets/wheeledlab_assets/MLP_model/dummy_throttle_mlp.pt",  # Replace with actual model path
-    pos_scale=1.0,  # Adjust based on your training data normalization
-    vel_scale=0.1,
-    torque_scale=1.0,
-    input_order="pos_vel",  # or "vel_pos" depending on your model
-    input_idx=[0, 1],  # Current and previous timesteps (adjust as needed)
-    # w parameters (used for clipping)
-    saturation_effort=1.05,
-    effort_limit=0.25,
-    velocity_limit=450.0,
-    damping=1000.0,
-    friction=0.0
-)
 
 
 HOUND_ACTUATOR_CFG = {
@@ -38,7 +22,16 @@ HOUND_ACTUATOR_CFG = {
         damping=10.,
         friction=0.,
     ),
-    "throttle_joints": THROTTLE_DCMOTOR_CFG,
+    "throttle_joints": DCMotorCfg(
+        joint_names_expr=[".*throttle"],
+        saturation_effort=1.05,
+        # effort_limit=0.25,
+        effort_limit=0.28,
+        velocity_limit=450.,
+        stiffness=0,
+        damping=1000.,
+        friction=0.0,
+    )
 }
 
 HOUND_SUS_ACTUATOR_CFG = { # 4WD
@@ -59,7 +52,7 @@ HOUND_SUS_2WD_ACTUATOR_CFG = {
     "suspension": HOUND_SUS_ACTUATOR_CFG["suspension"],
     "throttle_joints": HOUND_SUS_ACTUATOR_CFG["throttle_joints"].replace(
         joint_names_expr=["back_.*throttle"],
-        effort_limit=0.5, # More torque for two wheel drive
+        effort_limit=0.6, # More torque for two wheel drive
     ),
     "passive_joints": ImplicitActuatorCfg(
         joint_names_expr=["front_.*throttle"],
@@ -70,3 +63,21 @@ HOUND_SUS_2WD_ACTUATOR_CFG = {
         friction=0.0,
     ),
 }
+
+
+# Define MLP actuator configuration for throttle joints
+THROTTLE_MLP_MOD_CFG = ActuatorNetMLPModCfg(
+    joint_names_expr=[".*throttle"],
+    network_file="/home/tongo/WheeledLab/source/wheeledlab_assets/wheeledlab_assets/MLP_model/dummy_throttle_mlp.pt",  # Replace with actual model path
+    pos_scale=1.0,  # Adjust based on your training data normalization
+    vel_scale=0.1,
+    torque_scale=1.0,
+    input_order="pos_vel",  # or "vel_pos" depending on your model
+    input_idx=[0, 1],  # Current and previous timesteps (adjust as needed)
+    # w parameters (used for clipping)
+    saturation_effort=1.05,
+    effort_limit=0.25,
+    velocity_limit=450.0,
+    damping=1000.0,
+    friction=0.0
+)

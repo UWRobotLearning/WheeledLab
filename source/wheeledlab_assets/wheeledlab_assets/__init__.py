@@ -15,3 +15,4 @@ WHEELEDLAB_ASSETS_METADATA = toml.load(os.path.join(WHEELEDLAB_ASSETS_EXT_DIR, "
 __version__ = WHEELEDLAB_ASSETS_METADATA["package"]["version"]
 
 from .mushr import *
+from .f1tenth import *

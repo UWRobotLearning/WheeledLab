@@ -460,7 +460,7 @@ class MushrElevationRLEnvCfg(ManagerBasedRLEnvCfg):
 
         self.sim.dt = 0.01  # 100 Hz
         self.decimation = 10  # 10 Hz
-        self.actions.throttle_steer.scale = (3.0, 0.488)
+        self.actions.throttle_steer.Pa = (10.0, 0.488)
         self.sim.render_interval = self.decimation
         self.episode_length_s = 20
 

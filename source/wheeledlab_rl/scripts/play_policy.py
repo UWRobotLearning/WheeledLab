@@ -15,17 +15,20 @@ This command will save data and record a video of the playback using an existing
 
 from wheeledlab_rl.startup import startup
 import argparse
+
+POLICY = "true-leaf-548"
+
 parser = argparse.ArgumentParser(description="Play a policy in WheeledLab.")
 # These arguments assume that a run folder can be found
-parser.add_argument('-p', "--run-path", type=str, default=None, help="Path to run folder")
+parser.add_argument('-p', "--run-path", type=str, default="/home/tongo/WheeledLab/source/wheeledlab_rl/logs/"+POLICY, help="Path to run folder")
 parser.add_argument("--checkpoint", type=int, default=None, help="Checkpoint to load")
 # If no run folder, the task and policy model must be provided
 parser.add_argument("--task", type=str, default=None, help="Task name. Overrides run config env if provided")
 parser.add_argument("--policy-path", type=str, default=None, help="Path to policy file.")
 # Playback
-parser.add_argument("--steps", type=int, default=200, help="Length of recorded video in steps")
+parser.add_argument("--steps", type=int, default=150, help="Length of recorded video in steps")
 # Logging
-parser.add_argument('-sd', "--save-data", action="store_true", help="Save episode data")
+parser.add_argument('-sd', "--save-data", action="store_true", default=True, help="Save episode data")
 parser.add_argument("--video", action="store_true", help="Record video of the playback")
 parser.add_argument("--log-dir", type=str, default="playback/",
                     help="Directory to save logs. If run path is provided, this is ignored.")
@@ -113,7 +116,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg): # TODO: Add SB3 config suppo
         print(f"[INFO] Recording video of playback to: {playback_dir}")
         env = gym.wrappers.RecordVideo(env, **video_kwargs)
 
-    env = RslRlVecEnvWrapper(env)
 
     ############################################
     ########### BEGIN PLAYBACK SETUP ###########
@@ -121,7 +123,8 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg): # TODO: Add SB3 config suppo
 
     env.action_space.low = -1.
     env.action_space.high = 1.
-    env = ClipAction(env)
+    env = ClipAction(env) 
+    env = RslRlVecEnvWrapper(env)
 
     ppo_runner = OnPolicyRunner(env, agent_cfg.to_dict())
     ppo_runner.load(policy_resume_path)
@@ -133,6 +136,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg): # TODO: Add SB3 config suppo
     data = {
         'observations': [],
         'actions': [],
+        's_idx': [],
+        'time': [],
+        's_idx_max': []
     }
 
     ### PLAY POLICY ###
@@ -145,12 +151,15 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg): # TODO: Add SB3 config suppo
         with torch.inference_mode():
             # agent stepping
             actions = policy(obs)
+            # actions = torch.clip(actions, min=env.action_space.low, max=env.action_space.high)
             # env stepping
-            obs, _, _, _ = env.step(actions)
+            obs, _, _, extras = env.step(actions)
         # save data
         data['observations'].append(obs)
         data['actions'].append(actions)
-
+        data['s_idx'].append(extras['s_idx'])
+        data['time'].append(extras['time'])
+    data['s_idx_max'].append(extras['s_idx_max'])
     ###
 
     ########################
