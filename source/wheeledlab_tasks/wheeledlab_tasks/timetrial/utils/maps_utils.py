@@ -116,8 +116,8 @@ def set_stage_usd(file_path):
     stage.SetDefaultPrim(xform.GetPrim())
     return stage
 
-def set_plane_usd(hashmap, map_size_pixels, map_size_meters, stage, x_min, x_max, y_min, y_max, resolution):
-    plane = UsdGeom.Mesh.Define(stage, '/World/envs')
+def set_plane_usd(hashmap, origin, map_size_pixels, map_size_meters, stage, x_min, x_max, y_min, y_max, resolution):
+    plane = UsdGeom.Mesh.Define(stage, '/World/plane')
     # Create vertices 
     xs = np.linspace(
         -map_size_meters[1]/2,

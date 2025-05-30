@@ -54,12 +54,13 @@ class TraversabilityHashmapUtil:
         plt.close()
         self.num_plots += 1
     
-    def set_traversability_hashmap(self, traversability_hashmap, map_size, spacing):
+    def set_traversability_hashmap(self, traversability_hashmap, map_size, spacing, origin):
         self.num_rows, self.num_cols = map_size
         self.row_spacing, self.col_spacing = spacing
         self.traversability_hashmap = traversability_hashmap
         self.width = self.num_rows * self.row_spacing
         self.height = self.num_cols * self.col_spacing
+        self.origin = origin
         self.device = None
 
     """

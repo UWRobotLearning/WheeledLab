@@ -78,7 +78,7 @@ def deviation_from_waypoints(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = asset.data.root_pos_w[:, :2]
+    pos_xy_world =mdp.root_pos_w(env)[..., :2]
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
@@ -137,7 +137,7 @@ def heading_error_from_waypoints(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = asset.data.root_pos_w[:, :2]
+    pos_xy_world = mdp.root_pos_w(env)[..., :2]
     heading_w = asset.data.heading_w
     
     # Get waypoints (ensure float32 for consistency)
@@ -197,7 +197,7 @@ def deviation_centerline_horizon(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = asset.data.root_pos_w[:, :2]
+    pos_xy_world = mdp.root_pos_w(env)[..., :2]
     
     # Get waypoints
     waypoints_xy_world = torch.tensor(
@@ -268,7 +268,7 @@ def heading_error_horizon(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = asset.data.root_pos_w[:, :2]
+    pos_xy_world = mdp.root_pos_w(env)[..., :2]
     heading_w = asset.data.heading_w
     
     # Get waypoints
@@ -331,7 +331,7 @@ def d_lat_horizon(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = asset.data.root_pos_w[:, :2]
+    pos_xy_world = mdp.root_pos_w(env)[..., :2]
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
@@ -390,7 +390,7 @@ def kappa_radpm_horizon(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = asset.data.root_pos_w[:, :2]
+    pos_xy_world = mdp.root_pos_w(env)[..., :2]
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
@@ -449,7 +449,7 @@ def vx_mps_horizon(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = asset.data.root_pos_w[:, :2]
+    pos_xy_world = mdp.root_pos_w(env)[..., :2]
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
@@ -563,9 +563,10 @@ class F1TenthTimeTrialTerrainImporterCfg(TerrainImporterCfg):
     # generate a colored plane geometry
     NUM_ENVS  = 5
     MAP_NAME = 'f'
-    file_name = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', MAP_NAME+'.usd')
-    maps_folder_path = '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps'    
-    traversability_hashmap, waypoints, outer, inner, d_lat, psi_rad, kappa_radpm, vx_mps, spacing_meters, map_size_pixels = create_maps_from_waypoints(maps_folder_path, MAP_NAME, NUM_ENVS, file_name, resolution=0.1)
+    file_name = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', 'preinit.usd')
+    maps_folder_path = '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps' 
+    origin = [0, 0, 0]   
+    traversability_hashmap, waypoints, outer, inner, d_lat, psi_rad, kappa_radpm, vx_mps, spacing_meters, map_size_pixels = create_maps_from_waypoints(maps_folder_path, MAP_NAME, NUM_ENVS, origin, file_name, resolution=0.1)
 
     spacing = spacing_meters
     row_spacing, col_spacing = spacing
@@ -597,46 +598,6 @@ class F1TenthTimeTrialTerrainImporterCfg(TerrainImporterCfg):
     )
     debug_vis=False
     
-    # def generate_poses_from_init_points(self, env : ManagerBasedEnv, env_ids : torch.Tensor):
-    #     # temp = self.init_points[0][0]
-    #     # self.init_points = [[(temp[0], temp[1]) for _ in range(len(row))] for row in self.init_points]
-    #     env_ids = random.choices(range(0, int(self.num_rows / self.env_num_rows) * int(self.num_cols / self.env_num_cols)), k=env_ids.shape[0])
-
-    #     counts = Counter(env_ids)
-
-    #     sampled = {}
-
-    #     for env_id, count in counts.items():
-    #         # random.sample automatically picks unique items without replacement
-    #         sampled_poses_in_env = random.sample(self.init_points[int(env_id)], count)
-
-    #         env_x = env_id // (self.num_cols / self.env_num_cols)
-    #         env_y = env_id % (self.num_cols / self.env_num_cols)
-    #         center_x = env_x * self.env_num_rows * self.row_spacing + self.env_num_rows * self.row_spacing / 2
-    #         center_y = env_y * self.env_num_cols * self.col_spacing + self.env_num_cols * self.col_spacing / 2
-
-    #         sampled[env_id] = []
-    #         for pose in sampled_poses_in_env:
-    #             x = pose[0] * self.row_spacing - self.width / 2
-    #             y = pose[1] * self.col_spacing - self.height / 2
-    #             sampled[env_id].append(
-    #                 InitialPoseCfg(
-    #                     pos=(x, y, 0.1),
-    #                     rot_euler_xyz_deg=(0., 0., np.rad2deg(np.arctan2(y - center_y, x - center_x)))
-    #                 )
-    #             )
-        
-    #     sample_ind = {}
-    #     for env_id in sampled:
-    #         sample_ind[env_id] = 0
-
-    #     result = []
-    #     for i in env_ids:
-    #         result.append(sampled[i][sample_ind[i]])
-    #         sample_ind[i] += 1
-        
-    #     return result
-
     def generate_random_poses(self, env : ManagerBasedEnv, env_ids, num_poses):
         # generate random initial poses with margin
         env_origins = env.scene.env_origins
@@ -677,6 +638,7 @@ class F1TenthTimeTrialSceneCfg(InteractiveSceneCfg):
     # waypoint_loader = WaypointLoader(map_name="f")
     # Add ground config (ground is slightly below terrain)
     terrain = None
+    terrain_1 = None
 
 
     ground = AssetBaseCfg(
@@ -723,7 +685,7 @@ def store_data(
     asset: RigidObject = env.scene[asset_cfg.name]
     waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, 
                         device=env.device)[:, :2]
-    position_xy = asset.data.root_pos_w[:, :2]
+    position_xy = mdp.root_pos_w(env)[..., :2]
 
     # Find nearest waypoint (vectorized)
     current_idx, _ = find_nearest_waypoint(waypoints, position_xy)
@@ -825,17 +787,17 @@ class F1TenthTimeTrialEventsRandomCfg(F1TenthTimeTrialEventsCfg):
 ###### REWARDS #######
 ######################
 def is_traversable(env):
-    poses = mdp.root_pos_w(env)[..., :2]
+    poses =mdp.root_pos_w(env)[..., :2]
     traversability = TraversabilityHashmapUtil().get_traversability(poses)
     return torch.where(traversability, 1., 0.)
 
 def traversable_reward(env):
-    poses = mdp.root_pos_w(env)[..., :2]
+    poses =mdp.root_pos_w(env)[..., :2]
     traversability = TraversabilityHashmapUtil().get_traversability(poses)
     return torch.where(traversability, 1, 0.)
 
 def out_of_track_penalty(env):
-    poses = mdp.root_pos_w(env)[..., :2]
+    poses =mdp.root_pos_w(env)[..., :2]
     traversability = TraversabilityHashmapUtil().get_traversability(poses)
     return torch.where(traversability, 0., -1.)
 
@@ -859,7 +821,7 @@ def upright_penalty(env, thresh_deg):
     return penalty
 
 def vel_rew_trav(env, speed_target_on_trav: float=1., speed_target_on_non_trav: float=2.):
-    poses = mdp.root_pos_w(env)[..., :2]
+    poses =mdp.root_pos_w(env)[..., :2]
     terrain = env.scene[SceneEntityCfg("terrain").name]
     traversability = TraversabilityHashmapUtil().get_traversability(poses)
     speed_target = torch.where(traversability, speed_target_on_trav, speed_target_on_non_trav)
@@ -1016,7 +978,7 @@ def upright_bool(env, thresh_deg):
 
 
 def is_not_traversable(env):
-    poses = mdp.root_pos_w(env)[..., :2]
+    poses =mdp.root_pos_w(env)[..., :2]
     traversability = TraversabilityHashmapUtil().get_traversability(poses)
 
     num_episodes = env.common_step_counter // env.max_episode_length
@@ -1133,14 +1095,20 @@ class F1TenthTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
 
         #terrain
         MAP_NAME = self.map_name
-        NUM_ENVS = self.num_envs
+
         file_name = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', MAP_NAME+'.usd')
+
+        origin = [0, 0, 0]
+
+        NUM_ENVS = self.num_envs
+
         maps_folder_path = '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps'    
-        traversability_hashmap, waypoints, outer, inner, d_lat, psi_rad, kappa_radpm, vx_mps, spacing_meters, map_size_pixels = create_maps_from_waypoints(maps_folder_path, MAP_NAME, NUM_ENVS, file_name, resolution=0.1)
+
+        traversability_hashmap, waypoints, outer, inner, d_lat, psi_rad, kappa_radpm, vx_mps, spacing_meters, map_size_pixels = create_maps_from_waypoints(maps_folder_path, MAP_NAME, NUM_ENVS, origin, file_name, resolution=0.1)
 
         # terrain
-        self.terrain_cfg  = F1TenthTimeTrialTerrainImporterCfg(
-            prim_path="/World/terrain",
+        self.terrain  = F1TenthTimeTrialTerrainImporterCfg(
+            prim_path="/World/envs/env_.*",
             env_spacing=self.env_spacing,
             NUM_ENVS=self.num_envs,
             usd_path=file_name,
@@ -1154,6 +1122,7 @@ class F1TenthTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
             vx_mps=vx_mps,
             spacing_meters=spacing_meters,
             map_size_pixels=map_size_pixels,
+            origin=origin,
             # Override or add new terrain parameters
             MAP_NAME=MAP_NAME,  # Example: Change map name
             physics_material=sim_utils.RigidBodyMaterialCfg(
@@ -1163,9 +1132,40 @@ class F1TenthTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
             debug_vis=True,  # Example: Enable debug visualization
         )
 
+
+        # MAP_NAME_1 = 'GLC_smile_small'
+        # file_name_1 = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', MAP_NAME_1+'.usd')
+        # origin_1 = [10, 0, 0]
+        # traversability_hashmap_1, waypoints_1, outer_1, inner_1, d_lat_1, psi_rad_1, kappa_radpm_1, vx_mps_1, spacing_meters_1, map_size_pixels_1 = create_maps_from_waypoints(maps_folder_path, MAP_NAME_1, NUM_ENVS, origin_1, file_name_1, resolution=0.1)
+
+        # self.terrain_1  = F1TenthTimeTrialTerrainImporterCfg(
+        #     prim_path="/World/terrain_1",
+        #     env_spacing=self.env_spacing,
+        #     NUM_ENVS=self.num_envs,
+        #     usd_path=file_name_1,
+        #     traversability_hashmap=traversability_hashmap_1,
+        #     waypoints = waypoints_1,
+        #     outer = outer_1, 
+        #     inner = inner_1,
+        #     d_lat=d_lat_1,
+        #     psi_rad = psi_rad_1,
+        #     kappa_radpm=kappa_radpm_1,
+        #     vx_mps=vx_mps_1,
+        #     spacing_meters=spacing_meters_1,
+        #     map_size_pixels=map_size_pixels_1,
+        #     origin=origin_1,
+        #     # Override or add new terrain parameters
+        #     MAP_NAME='f',  # Example: Change map name
+        #     physics_material=sim_utils.RigidBodyMaterialCfg(
+        #         static_friction=1.1,  # Example: Adjust friction
+        #         dynamic_friction=1.1,
+        #     ),
+        #     debug_vis=True,  # Example: Enable debug visualization
+        # )
+
         # Scene settings
         self.scene = F1TenthTimeTrialSceneCfg(
-            num_envs=self.num_envs, env_spacing=self.env_spacing, terrain = self.terrain_cfg 
+            num_envs=self.num_envs, env_spacing=self.env_spacing, terrain = self.terrain
         )
 
         # Set the environment class

@@ -6,7 +6,7 @@ from .maps_utils import *
 
 ### hard coded for now
 
-def create_maps_from_waypoints(maps_folder_path, map_name, num_envs, file_path, resolution):
+def create_maps_from_waypoints(maps_folder_path, map_name, num_envs, origin, file_path, resolution):
     """
     Create a USD file and traversability hashmap from a PNG + YAML pair.
     
@@ -27,7 +27,7 @@ def create_maps_from_waypoints(maps_folder_path, map_name, num_envs, file_path, 
     waypoints, trackbounds, d_lat, psi_rad, kappa_radpm, vx_mps = load_waypoints(waypoints_path)
     
     # load yaml file info
-    original_resolution, origin, free_thresh = load_yaml(yaml_path)
+    original_resolution, origin_yaml, free_thresh = load_yaml(yaml_path)
     
     # separate inner and outer bounds into two separate arrays
     outer, inner = separate_and_align_bounds(waypoints, trackbounds)
@@ -42,7 +42,7 @@ def create_maps_from_waypoints(maps_folder_path, map_name, num_envs, file_path, 
     
 
     # Generate plane
-    set_plane_usd(hashmap, map_size_pixels, map_size_meters, stage, x_min, x_max, y_min, y_max, resolution)
+    set_plane_usd(hashmap, origin, map_size_pixels, map_size_meters, stage, x_min, x_max, y_min, y_max, resolution)
     # set_plane_usd_v2(hashmap, env_origins, map_size_pixels, map_size_meters, stage)
 
     # Convert waypoints to USD coordinates (adjust for origin and flip Y if needed)
@@ -60,7 +60,7 @@ def create_maps_from_waypoints(maps_folder_path, map_name, num_envs, file_path, 
     spacing_meters = (resolution, resolution)  # Equal spacing in x/y
     traversability_hashmap = hashmap.tolist()
     TraversabilityHashmapUtil().set_traversability_hashmap(
-        traversability_hashmap, map_size_pixels, spacing_meters
+        traversability_hashmap, map_size_pixels, spacing_meters, origin
     )
     return traversability_hashmap, waypoints_usd, outer_usd, inner_usd, d_lat.tolist(), psi_rad.tolist(), kappa_radpm.tolist(), vx_mps.tolist(), spacing_meters, map_size_pixels
 
@@ -80,10 +80,10 @@ def generate_random_poses(env_origins, env_ids, num_poses, row_spacing, col_spac
     
     # Convert all positions at once (vectorized)
     xs = (valid_x[idxs] - W // 2) * row_spacing
-    ys = (valid_y[idxs] - H // 2) * col_spacing
+    ys = (valid_y[idxs] - H // 2) * col_spacing 
     
-    # Pre-compute waypoints tensor
-    waypoints_xy = torch.tensor(waypoints_usd)[:, :2].to(torch.float32)
+    # Pre-compute waypoints tensor shifted by the origins
+    waypoints_xy = torch.tensor(waypoints_usd)[:, :2].to(torch.float32) 
     inner_xy = torch.tensor(inner_usd)[:, :2].to(torch.float32)
 
     # Vectorized angle computation
@@ -95,20 +95,15 @@ def generate_random_poses(env_origins, env_ids, num_poses, row_spacing, col_spac
     next_indices = (current_indices + lookahead) % len(inner_xy)
     
     # we take the inner bound instead of the closest waypoint to avoid case when the centerline from the other side of the wall is closer
-    current_wps = inner_xy[current_indices]
+    current_wps = inner_xy[current_indices] 
     next_wps = inner_xy[next_indices]
     
     deltas = next_wps - current_wps
     angles = torch.rad2deg(torch.atan2(deltas[:, 1], deltas[:, 0])) + np.random.uniform(-15,15)
     
-    # Get the origins for the environments that need reset
-    selected_origins = env_origins[env_ids]
-    
-    # Shift positions by their environment origins (only x and y)
-    xs_shifted = xs + selected_origins[:, 0].cpu().numpy()
-    ys_shifted = ys + selected_origins[:, 1].cpu().numpy()
-    
-    # Combine results
+    # Now shift the coordinates according to env_origins for the reset
+    xs_shifted = (valid_x[idxs] - W // 2) * row_spacing + env_origins[env_ids, 0].cpu().numpy()
+    ys_shifted = (valid_y[idxs] - H // 2) * col_spacing + env_origins[env_ids, 1].cpu().numpy()
     poses = list(zip(xs_shifted.tolist(), ys_shifted.tolist(), angles.tolist()))
 
     # Combine results

@@ -10,4 +10,5 @@ source/wheeledlab_assets/test/create_robot_scene.py
 source/wheeledlab_assets/data/waypoints_f.usd
 .gitignore
 source/wheeledlab_assets/data/waypoints.usd
-source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps/
+source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps
+source/wheeledlab_assets/data/Robots/
