@@ -46,14 +46,16 @@ class TrainConfig:
     device: str = "cuda:0"              # Device to use
     load_run: Optional[str] = None    # Load a previously trained model
     load_run_checkpoint: int = 0        # Load a specific checkpoint from a previously trained model
-    # load_run: Optional[str] = "cerulean-lion-483"      # Load a previously trained model
-    # load_run_checkpoint: int = 100        # Load a specific checkpoint from a previously trained model
+    # load_run: Optional[str] = "dutiful-microwave-682"      # Load a previously trained model
+    # load_run_checkpoint: int = 75        # Load a specific checkpoint from a previously trained model
 
     log: LogConfig = LogConfig()
 
 @configclass
 class EnvSetup:
     num_envs: int = 1024                # Number of environments to simulate
+    env_spacing: int = 0                # Spacing between environments
+    map_name: str = 'THETRACK'
     task_name: str = MISSING            # Name of the task
 
 @configclass

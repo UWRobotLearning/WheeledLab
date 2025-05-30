@@ -5,6 +5,7 @@ import torch
 import random
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+from dataclasses import MISSING
 
 import isaaclab.envs.mdp as mdp
 import isaaclab.sim as sim_utils
@@ -31,12 +32,12 @@ from isaaclab.envs import ManagerBasedRLEnvCfg
 from wheeledlab.envs.mdp import increase_reward_weight_over_time
 from wheeledlab_assets import WHEELEDLAB_ASSETS_DATA_DIR
 from wheeledlab_assets.mushr import MUSHR_SUS_CFG
-from wheeledlab_assets.f1tenth import F1TENTH_CFG
+from wheeledlab_assets.f1tenth import F1TENTH_CFG, LB_CFG
 from wheeledlab_tasks.common import Mushr4WDActionCfg
-from wheeledlab_tasks.common import F1Tenth4WDActionCfg
+from wheeledlab_tasks.common import F1Tenth4WDActionCfg, LB4WDActionCfg
 from .disable_lidar import disable_all_lidars
 
-from .utils import create_maps_from_png, generate_random_poses, TraversabilityHashmapUtil, WaypointsUtil
+from .utils import create_maps_from_waypoints, generate_random_poses, TraversabilityHashmapUtil, find_nearest_waypoint 
 from . import mdp_sensors
 from .mdp import reset_root_state
 
@@ -240,8 +241,11 @@ def deviation_centerline_horizon(
     
     # Signed deviations
     signed_deviations = signs * distances
-    
-    return signed_deviations
+    norm_distance = 10
+    norm_signed_deviations = signed_deviations/norm_distance
+
+    return norm_signed_deviations 
+
 
 def heading_error_horizon(
     env: ManagerBasedEnv, 
@@ -303,7 +307,9 @@ def heading_error_horizon(
         torch.cos(desired_headings - heading_w.unsqueeze(-1))
     )
     
-    return heading_errors
+    norm_heading_errors = np.pi
+
+    return heading_errors/norm_heading_errors
 
 def d_lat_horizon(
     env: ManagerBasedEnv, 
@@ -358,175 +364,131 @@ def d_lat_horizon(
     
     # Gather d_lat values - output shape will be [num_envs, horizon, 2]
     next_d_lat_horizon = d_lat[next_idx_horizon, :]
-    
-    # Reshape to [num_envs, horizon * 2] for concatenation with other observations
-    return next_d_lat_horizon.reshape(-1, horizon * 2)
+    norm_d_lat = 2
 
-def centerline_absolute_heading_horizon(
-    env: ManagerBasedEnv,
+    norm_next_d_lat_horizon = next_d_lat_horizon.reshape(-1, horizon * 2)/norm_d_lat
+    # Reshape to [num_envs, horizon * 2] for concatenation with other observations
+    return norm_next_d_lat_horizon
+
+def kappa_radpm_horizon(
+    env: ManagerBasedEnv, 
     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
     lookahead: int = 10,
-    horizon: int = 5,
-    angle_window: int = 3  # Number of waypoints to use for angle calculation
+    horizon: int = 5
 ) -> torch.Tensor:
     """
-    Calculate the relative heading angles of the centerline at horizon points.
+    Calculate heading error between car's current orientation and direction to lookahead waypoint.
     
     Args:
         env: The environment instance
         asset_cfg: Configuration for the robot asset
-        lookahead: Base number of waypoints to look ahead
-        horizon: Number of lookahead points to return
-        angle_window: Number of waypoints to use for calculating each heading angle
+        interval_lookahead: Number of waypoints to look ahead (default 10)
+        horizon: horizon length of lookaheads (total horizon = lookahead * horizon)
         
     Returns:
-        Tensor of normalized heading angles (range [-1, 1] where 1 = π radians)
+        Tensor of normalized lateral space from centerline to trackbounds to the left (inner) and right (outer)
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
     pos_xy_world = asset.data.root_pos_w[:, :2]
     
-    # Get waypoints
+    # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
-        env.scene.terrain.cfg.waypoints,
+        env.scene.terrain.cfg.waypoints, 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
     
     inner_xy_world = torch.tensor(
-        env.scene.terrain.cfg.inner,
+        env.scene.terrain.cfg.inner, 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
 
-    # Find nearest waypoint
+    kappa_radpm = torch.tensor(
+        env.scene.terrain.cfg.kappa_radpm, 
+        device=env.device,
+        dtype=torch.float32
+    )
+
+    # Find nearest waypoint (use inner trackbound)
     current_idx, _ = find_nearest_waypoint(inner_xy_world, pos_xy_world)  # shape: [num_envs]
     
-    # Create lookahead indices
-    lookahead_horizon = torch.linspace(lookahead, lookahead*horizon, horizon, device=env.device)
-    horizon_indices = (current_idx.unsqueeze(-1) + lookahead_horizon.unsqueeze(0)) % len(waypoints_xy_world)
-    horizon_indices = horizon_indices.long()
+    # Create lookahead indices for all environments
+    lookahead_horizon = torch.linspace(lookahead, lookahead*horizon, horizon, device=env.device)  # shape: [horizon]
     
-    # Calculate heading angles using a window of waypoints for smoother results
-    window_indices = torch.arange(-angle_window//2, angle_window//2 + 1, device=env.device)
-    all_indices = (horizon_indices.unsqueeze(-1) + window_indices.unsqueeze(0).unsqueeze(0)) % len(waypoints_xy_world)
+    # Add current_idx (num_envs, 1) with lookahead_horizon (1, horizon) to get (num_envs, horizon)
+    next_idx_horizon = (current_idx.unsqueeze(-1) + lookahead_horizon.unsqueeze(0)) % len(waypoints_xy_world)
+    next_idx_horizon = next_idx_horizon.long()  # Convert to integer indices
     
-    # Get waypoint positions for all windows [num_envs, horizon, window_size, 2]
-    window_waypoints = waypoints_xy_world[all_indices]
-    
-    # Calculate vectors between first and last points in each window
-    vectors = window_waypoints[:, :, -1, :] - window_waypoints[:, :, 0, :]
-    
-    # Calculate heading angles [num_envs, horizon]
-    heading_angles = torch.atan2(vectors[:, :, 1], vectors[:, :, 0])
-    
-    # Normalize angles to [-1, 1] range where 1 = π radians
-    normalized_angles = heading_angles / torch.pi
-    
-    return normalized_angles.reshape(-1, horizon)  # [num_envs, horizon]
+    # Gather d_lat values - output shape will be [num_envs, horizon, 2]
+    norm_kappa_radpm = 3
+    next_kappa_radpm_horizon = kappa_radpm[next_idx_horizon, :]
+    norm_next_kappa_radpm_horizon = next_kappa_radpm_horizon/norm_kappa_radpm
 
-def centerline_relative_heading_horizon(
-    env: ManagerBasedEnv,
+    # Reshape to [num_envs, horizon * 2] for concatenation with other observations
+    return torch.reshape(norm_next_kappa_radpm_horizon, (-1, horizon)) 
+
+def vx_mps_horizon(
+    env: ManagerBasedEnv, 
     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
     lookahead: int = 10,
-    horizon: int = 5,
-    angle_window: int = 1  # Smoothing window
+    horizon: int = 5
 ) -> torch.Tensor:
-    """Calculate the *relative* heading change between consecutive horizon points."""
-    # Get waypoints
-    waypoints_xy_world = torch.tensor(
-        env.scene.terrain.cfg.waypoints,
-        device=env.device,
-        dtype=torch.float32
-    )[:, :2]
+    """
+    Calculate heading error between car's current orientation and direction to lookahead waypoint.
     
-    # Find nearest waypoint
+    Args:
+        env: The environment instance
+        asset_cfg: Configuration for the robot asset
+        interval_lookahead: Number of waypoints to look ahead (default 10)
+        horizon: horizon length of lookaheads (total horizon = lookahead * horizon)
+        
+    Returns:
+        Tensor of normalized lateral space from centerline to trackbounds to the left (inner) and right (outer)
+    """
+    # Get current state
     asset = env.scene[asset_cfg.name]
     pos_xy_world = asset.data.root_pos_w[:, :2]
-    inner_xy_world = torch.tensor(
-        env.scene.terrain.cfg.inner,
+    
+    # Get waypoints (ensure float32 for consistency)
+    waypoints_xy_world = torch.tensor(
+        env.scene.terrain.cfg.waypoints, 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
-    current_idx, _ = find_nearest_waypoint(inner_xy_world, pos_xy_world)  # [num_envs]
     
-    # Get horizon indices [num_envs, horizon + 1] (extra point for differences)
-    lookahead_steps = torch.linspace(0, lookahead * horizon, horizon + 1, device=env.device)
-    horizon_indices = (current_idx.unsqueeze(-1) + lookahead_steps.unsqueeze(0)) % len(waypoints_xy_world)
-    horizon_indices = horizon_indices.long()
-    
-    # Compute smoothed headings for each point [num_envs, horizon + 1]
-    window_indices = torch.arange(-angle_window//2, angle_window//2 + 1, device=env.device)
-    all_indices = (horizon_indices.unsqueeze(-1) + window_indices.unsqueeze(0).unsqueeze(0)) % len(waypoints_xy_world)
-    window_waypoints = waypoints_xy_world[all_indices]  # [num_envs, horizon+1, window_size, 2]
-    
-    # Vectors from first to last point in each window
-    vectors = window_waypoints[:, :, -1, :] - window_waypoints[:, :, 0, :]
-    headings = torch.atan2(vectors[:, :, 1], vectors[:, :, 0])  # [num_envs, horizon + 1]
-    
-    # Compute relative heading changes (delta between consecutive points)
-    relative_headings = headings[:, 1:] - headings[:, :-1]  # [num_envs, horizon]
-    
-    # Normalize to [-1, 1] (1 = π radians)
-    normalized = relative_headings / torch.pi
-    
-    return normalized.reshape(-1, horizon)  # [num_envs, horizon]
+    inner_xy_world = torch.tensor(
+        env.scene.terrain.cfg.inner, 
+        device=env.device,
+        dtype=torch.float32
+    )[:, :2]
 
-def centerline_features_horizon(
-    env: ManagerBasedEnv,
-    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
-    lookahead: int = 10,
-    horizon: int = 5,
-    angle_window: int = 3
-) -> torch.Tensor:
-    """
-    Returns BOTH relative and absolute heading features.
-    Output shape: [num_envs, horizon * 4] where each point has:
-    - [0]: Normalized absolute heading (∈ [-1, 1])
-    - [1]: Normalized relative heading (∈ [-1, 1])
-    - [2:4]: Waypoint XY offset (normalized)
-    """
-    # Get waypoints and current state
-    waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, device=env.device, dtype=torch.float32)[:, :2]
-    asset = env.scene[asset_cfg.name]
-    pos_xy = asset.data.root_pos_w[:, :2]
-    
-    # Find nearest waypoint [num_envs]
-    current_idx, _ = find_nearest_waypoint(
-        torch.tensor(env.scene.terrain.cfg.inner, device=env.device)[:, :2],
-        pos_xy
+    vx_mps = torch.tensor(
+        env.scene.terrain.cfg.vx_mps, 
+        device=env.device,
+        dtype=torch.float32
     )
+
+    # Find nearest waypoint (use inner trackbound)
+    current_idx, _ = find_nearest_waypoint(inner_xy_world, pos_xy_world)  # shape: [num_envs]
     
-    # Horizon indices [num_envs, horizon + 1]
-    steps = torch.linspace(0, lookahead * horizon, horizon + 1, device=env.device)
-    idxs = (current_idx.unsqueeze(-1) + steps.unsqueeze(0)) % len(waypoints)
-    idxs = idxs.long()
+    # Create lookahead indices for all environments
+    lookahead_horizon = torch.linspace(lookahead, lookahead*horizon, horizon, device=env.device)  # shape: [horizon]
     
-    # Smoothed headings [num_envs, horizon + 1]
-    window = torch.arange(-angle_window//2, angle_window//2 + 1, device=env.device)
-    wp_window = waypoints[(idxs.unsqueeze(-1) + window.unsqueeze(0).unsqueeze(0)) % len(waypoints)]
-    vectors = wp_window[:, :, -1] - wp_window[:, :, 0]  # [num_envs, horizon+1, 2]
-    headings = torch.atan2(vectors[:, :, 1], vectors[:, :, 0])
+    # Add current_idx (num_envs, 1) with lookahead_horizon (1, horizon) to get (num_envs, horizon)
+    next_idx_horizon = (current_idx.unsqueeze(-1) + lookahead_horizon.unsqueeze(0)) % len(waypoints_xy_world)
+    next_idx_horizon = next_idx_horizon.long()  # Convert to integer indices
     
-    # Features
-    abs_headings = headings[:, :-1] / torch.pi  # [num_envs, horizon]
-    rel_headings = (headings[:, 1:] - headings[:, :-1]) / torch.pi  # [num_envs, horizon]
-    xy_offsets = waypoints[idxs[:, :-1]] - pos_xy.unsqueeze(1)  # [num_envs, horizon, 2]
-    
-    # Normalize XY offsets by track width
-    d_lat = torch.tensor(env.scene.terrain.cfg.d_lat, device=env.device).mean(dim=1).max()
-    xy_offsets = xy_offsets / (d_lat + 1e-6)
-    
-    # Concatenate and reshape [num_envs, horizon * 4]
-    features = torch.cat([
-        abs_headings.unsqueeze(-1),  # [num_envs, horizon, 1]
-        rel_headings.unsqueeze(-1),  # [num_envs, horizon, 1]
-        xy_offsets                  # [num_envs, horizon, 2]
-    ], dim=-1)
-    return features.reshape(features.shape[0], -1)  # Flatten last two dims
+    # Gather d_lat values - output shape will be [num_envs, horizon, 2]
+    norm_vx = 10
+    next_vx_mps_horizon = vx_mps[next_idx_horizon, :]
+    norm_next_vx_mps_horizon = next_vx_mps_horizon/norm_vx
+    # Reshape to [num_envs, horizon * 2] for concatenation with other observations
+    return torch.reshape(norm_next_vx_mps_horizon, (-1, horizon))
 
 HORIZON = 10
-LOOKAHEAD = 20
+LOOKAHEAD = 15
 @configclass
 class F1TenthTimeTrialObsCfg:
     """Observation specifications for the environment."""
@@ -559,11 +521,22 @@ class F1TenthTimeTrialObsCfg:
             params={'lookahead': LOOKAHEAD,
                     'horizon': HORIZON}
         )
-        centerline_horizon = ObsTerm(
-            func=centerline_relative_heading_horizon,
+        #only one env gives problem
+        kappa_radpm_horizon = ObsTerm(
+            func=kappa_radpm_horizon,
             params={'lookahead': LOOKAHEAD,
                     'horizon': HORIZON}
         )
+        # vx_mps_horizon = ObsTerm(
+        #     func=vx_mps_horizon,
+        #     params={'lookahead': LOOKAHEAD,
+        #             'horizon': HORIZON}
+        # )
+        # centerline_horizon = ObsTerm(
+        #     func=centerline_relative_heading_horizon,
+        #     params={'lookahead': LOOKAHEAD,
+        #             'horizon': HORIZON}
+        # )
         def __post_init__(self) -> None:
             self.enable_corruption = False
             self.concatenate_terms = True
@@ -588,10 +561,11 @@ class F1TenthTimeTrialTerrainImporterCfg(TerrainImporterCfg):
     # map generation parameters
 
     # generate a colored plane geometry
-    MAP_NAME = 'THETRACK'
+    NUM_ENVS  = 5
+    MAP_NAME = 'f'
     file_name = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', MAP_NAME+'.usd')
     maps_folder_path = '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps'    
-    traversability_hashmap, waypoints, outer, inner, d_lat, psi_rad, kappa_radpm, vx_mps, spacing_meters, map_size_pixels = create_maps_from_png(maps_folder_path, MAP_NAME, file_name, visualization_scale=0.5)
+    traversability_hashmap, waypoints, outer, inner, d_lat, psi_rad, kappa_radpm, vx_mps, spacing_meters, map_size_pixels = create_maps_from_waypoints(maps_folder_path, MAP_NAME, NUM_ENVS, file_name, resolution=0.1)
 
     spacing = spacing_meters
     row_spacing, col_spacing = spacing
@@ -602,7 +576,6 @@ class F1TenthTimeTrialTerrainImporterCfg(TerrainImporterCfg):
     # environments size are generated in a grid
     env_size = map_size
 
-
     width = num_rows * row_spacing
     height = num_cols * col_spacing
     
@@ -610,12 +583,7 @@ class F1TenthTimeTrialTerrainImporterCfg(TerrainImporterCfg):
     traversability_hashmap is a 2D numpy array of traversability values, 1.0 or 0.0
     shape: [num_rows, num_cols]
     """
-
-    # Defined logic for driveable track/out of bounds
-    # traversability_hashmap, env_boundaries = create_oval(
-    #     file_name, map_size, spacing, env_size
-    # )
-
+    env_spacing = 0
 
     prim_path = "/World/ground"
     terrain_type="usd"
@@ -624,54 +592,55 @@ class F1TenthTimeTrialTerrainImporterCfg(TerrainImporterCfg):
     physics_material=sim_utils.RigidBodyMaterialCfg(
         friction_combine_mode="multiply",
         restitution_combine_mode="multiply",
-        static_friction=1.0,
-        dynamic_friction=1.0,
+        static_friction=1.1,
+        dynamic_friction=1.1,
     )
     debug_vis=False
     
-    def generate_poses_from_init_points(self, env : ManagerBasedEnv, env_ids : torch.Tensor):
-        # temp = self.init_points[0][0]
-        # self.init_points = [[(temp[0], temp[1]) for _ in range(len(row))] for row in self.init_points]
-        env_ids = random.choices(range(0, int(self.num_rows / self.env_num_rows) * int(self.num_cols / self.env_num_cols)), k=env_ids.shape[0])
+    # def generate_poses_from_init_points(self, env : ManagerBasedEnv, env_ids : torch.Tensor):
+    #     # temp = self.init_points[0][0]
+    #     # self.init_points = [[(temp[0], temp[1]) for _ in range(len(row))] for row in self.init_points]
+    #     env_ids = random.choices(range(0, int(self.num_rows / self.env_num_rows) * int(self.num_cols / self.env_num_cols)), k=env_ids.shape[0])
 
-        counts = Counter(env_ids)
+    #     counts = Counter(env_ids)
 
-        sampled = {}
+    #     sampled = {}
 
-        for env_id, count in counts.items():
-            # random.sample automatically picks unique items without replacement
-            sampled_poses_in_env = random.sample(self.init_points[int(env_id)], count)
+    #     for env_id, count in counts.items():
+    #         # random.sample automatically picks unique items without replacement
+    #         sampled_poses_in_env = random.sample(self.init_points[int(env_id)], count)
 
-            env_x = env_id // (self.num_cols / self.env_num_cols)
-            env_y = env_id % (self.num_cols / self.env_num_cols)
-            center_x = env_x * self.env_num_rows * self.row_spacing + self.env_num_rows * self.row_spacing / 2
-            center_y = env_y * self.env_num_cols * self.col_spacing + self.env_num_cols * self.col_spacing / 2
+    #         env_x = env_id // (self.num_cols / self.env_num_cols)
+    #         env_y = env_id % (self.num_cols / self.env_num_cols)
+    #         center_x = env_x * self.env_num_rows * self.row_spacing + self.env_num_rows * self.row_spacing / 2
+    #         center_y = env_y * self.env_num_cols * self.col_spacing + self.env_num_cols * self.col_spacing / 2
 
-            sampled[env_id] = []
-            for pose in sampled_poses_in_env:
-                x = pose[0] * self.row_spacing - self.width / 2
-                y = pose[1] * self.col_spacing - self.height / 2
-                sampled[env_id].append(
-                    InitialPoseCfg(
-                        pos=(x, y, 0.1),
-                        rot_euler_xyz_deg=(0., 0., np.rad2deg(np.arctan2(y - center_y, x - center_x)))
-                    )
-                )
+    #         sampled[env_id] = []
+    #         for pose in sampled_poses_in_env:
+    #             x = pose[0] * self.row_spacing - self.width / 2
+    #             y = pose[1] * self.col_spacing - self.height / 2
+    #             sampled[env_id].append(
+    #                 InitialPoseCfg(
+    #                     pos=(x, y, 0.1),
+    #                     rot_euler_xyz_deg=(0., 0., np.rad2deg(np.arctan2(y - center_y, x - center_x)))
+    #                 )
+    #             )
         
-        sample_ind = {}
-        for env_id in sampled:
-            sample_ind[env_id] = 0
+    #     sample_ind = {}
+    #     for env_id in sampled:
+    #         sample_ind[env_id] = 0
 
-        result = []
-        for i in env_ids:
-            result.append(sampled[i][sample_ind[i]])
-            sample_ind[i] += 1
+    #     result = []
+    #     for i in env_ids:
+    #         result.append(sampled[i][sample_ind[i]])
+    #         sample_ind[i] += 1
         
-        return result
+    #     return result
 
-    def generate_random_poses(self, num_poses):
+    def generate_random_poses(self, env : ManagerBasedEnv, env_ids, num_poses):
         # generate random initial poses with margin
-        init_poses = generate_random_poses(num_poses, self.row_spacing, self.col_spacing, self.traversability_hashmap, self.waypoints, self.outer, self.inner, margin=0.1)
+        env_origins = env.scene.env_origins
+        init_poses = generate_random_poses(env_origins, env_ids, num_poses, self.row_spacing, self.col_spacing, self.traversability_hashmap, self.waypoints, self.outer, self.inner, margin=0.1)
         valid_init_poses = [
             InitialPoseCfg(
                 pos=(x, y, 0.02),
@@ -701,21 +670,24 @@ class F1TenthTimeTrialTerrainImporterCfg(TerrainImporterCfg):
         y_idx = torch.clamp(y_idx, 0, self.num_cols-1)
         return x_idx, y_idx
 
+
 @configclass
 class F1TenthTimeTrialSceneCfg(InteractiveSceneCfg):
     """Configuration for a Mushr car Scene with racetrack terrain and Sensors."""
-    terrain = F1TenthTimeTrialTerrainImporterCfg()
     # waypoint_loader = WaypointLoader(map_name="f")
     # Add ground config (ground is slightly below terrain)
+    terrain = None
+
+
     ground = AssetBaseCfg(
         prim_path="/World/base",
-        spawn = sim_utils.GroundPlaneCfg(size=(terrain.width, terrain.height),
+        spawn = sim_utils.GroundPlaneCfg(size=(500, 500),
                                          color=(0,0,0),
                                          physics_material=sim_utils.RigidBodyMaterialCfg(
                                             friction_combine_mode="multiply",
                                             restitution_combine_mode="multiply",
-                                            static_friction=1.3,
-                                            dynamic_friction=1.3,
+                                            static_friction=1.0,
+                                            dynamic_friction=1.0,
                                          ),
         )
     )
@@ -728,6 +700,8 @@ class F1TenthTimeTrialSceneCfg(InteractiveSceneCfg):
 
     robot: AssetBaseCfg = F1TENTH_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
     # robot: ArticulationCfg = MUSHR_SUS_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    # robot: ArticulationCfg = LB_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+
     ground.init_state.pos = (0.0, 0.0, -1e-4)
 
     def __post_init__(self):
@@ -769,6 +743,7 @@ class F1TenthTimeTrialEventsCfg:
         func=reset_root_state,
         mode="reset",
     )
+
 
     # store_data = EventTerm( 
     #     func= store_data,
@@ -876,26 +851,6 @@ def bool_is_not_traversable(env):
 def is_traversable_speed_scaled(env):
     return is_traversable(env) * mdp.base_lin_vel(env)[:, 0]
 
-# def is_traversable_wheels(env):
-#     body_asset_cfg = SceneEntityCfg("robot", body_names=".*wheel_link")
-#     body_asset_cfg.resolve(env.scene)
-#     # B x num_body x 2
-#     poses = env.scene[body_asset_cfg.name].data.body_pos_w[:, body_asset_cfg.body_ids][:, :, :2]
-#     B, num_body = poses.shape[:2]
-#     # terrain = env.scene[SceneEntityCfg("terrain").name]
-#     traversability = TraversabilityHashmapUtil().get_traversability(poses.reshape(-1, 2)).reshape(B, num_body)
-#     return torch.where(traversability == 1, 1., -5.).sum(dim=-1)
-
-# def binary_is_traversable_wheels(env):
-#     body_asset_cfg = SceneEntityCfg("robot", body_names=".*wheel_link")
-#     body_asset_cfg.resolve(env.scene)
-#     # B x num_body x 2
-#     poses = env.scene[body_asset_cfg.name].data.body_pos_w[:, body_asset_cfg.body_ids][:, :, :2]
-#     B, num_body = poses.shape[:2]
-#     # terrain = env.scene[SceneEntityCfg("terrain").name]
-#     traversability = TraversabilityHashmapUtil().get_traversability(poses.reshape(-1, 2)).reshape(B, num_body)
-#     return torch.where(traversability == 1, 1., 0.).sum(dim=-1) == 0
-
 def upright_penalty(env, thresh_deg):
     rot_mat = math_utils.matrix_from_quat(mdp.root_quat_w(env))
     up_dot = rot_mat[:, 2, 2]
@@ -937,58 +892,45 @@ def progress_rew(env):
 
 def progress_waypoint_bool(env):
     # Initialize buffer if first run
-    if not hasattr(env, '_last_waypoint_indices'):
-        env._last_waypoint_indices = torch.zeros(env.num_envs, 
-                                               dtype=torch.long,
-                                               device=env.device)
+    if not hasattr(env, '_history_waypoint_indices'):
+        env._history_length = 10  # Store last 10 waypoints
+        env._history_waypoint_indices = torch.zeros(
+            (env.num_envs, env._history_length), 
+            dtype=torch.long,
+            device=env.device
+        )
+        env._reset_env_bool = torch.ones(  # Tracks where to insert the next index
+            env.num_envs,
+            dtype=torch.bool,
+            device=env.device
+        )
     
-    # Get current positions and waypoints (single operation)
+    # Get current waypoint
     position_xy = env.scene["robot"].data.root_pos_w[:, :2]
-    waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, 
-                           device=env.device)[:, :2]
-    
-    # Find nearest waypoint (vectorized)
+    waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, device=env.device)[:, :2]
     current_idx, _ = find_nearest_waypoint(waypoints, position_xy)
     num_waypoints = len(waypoints)
-    
-    # Calculate progress (handles lap transitions)
-    progress = (current_idx - env._last_waypoint_indices) % num_waypoints
-    
-    # Valid progress must be:
-    # 1. Forward movement (progress > 0)
-    # 2. Not cutting corners or reset far (progress <= 10)
-    progress_bool = (progress > 0) & (progress <= 10)
-    # Update indices to current_idx 
 
+    # Shift old values to the right (discard oldest)
+    env._history_waypoint_indices[:, 1:] = env._history_waypoint_indices[:, :-1].clone()
+    
+    # Insert newest at position 0
+    env._history_waypoint_indices[:, 0] = current_idx
 
-    #there should be a more elegant way to store these...
+    # Progress = (current - previous) % num_waypoints
+    # Previous is now at [:, 1] (since [:, 0] is current)
+    progress = (current_idx - env._history_waypoint_indices[:, 1]) % num_waypoints
+    # progress_bool = (progress > 0) & (progress <= 10)
+
+    progress_bool = (progress > 0) & (progress <= 20) & (env._reset_env_bool == False)
+    env._reset_env_bool = torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
+
+    # Store extras
     env.extras['s_idx'] = current_idx.clone()
     env.extras['time'] = torch.tensor(env.sim.current_time, device=env.device)
-    env.extras['s_idx_max'] = torch.tensor(num_waypoints-1, device=env.device)
+    env.extras['s_idx_max'] = torch.tensor(num_waypoints - 1, device=env.device)
 
-    # Always update
-    env._last_waypoint_indices = current_idx.clone()  
- 
     return progress_bool, progress
-
-def find_nearest_waypoint(waypoints: torch.Tensor,  # Shape: [M, 2] - M waypoints
-                         positions: torch.Tensor, # [N,2] - N cars
-                         ) -> tuple[int, torch.Tensor]:
-    """
-    Finds closest waypoints for all cars, handling circular track wrapping.
-    If lookahead is None, searches all waypoints (accurate but slower).
-    With lookahead, only checks next K waypoints from current closest (faster).
-    """
-    M = waypoints.shape[0]
-    N = positions.shape[0]
-    
-    # First find rough closest without wrapping [N]
-    diffs = positions.unsqueeze(1) - waypoints.unsqueeze(0)  # [N,M,2]
-    dists = torch.norm(diffs, p=2, dim=2)  # [N,M]
-    closest_idx = torch.argmin(dists, dim=1)  # [N]
-    
-    return closest_idx, dists[torch.arange(N), closest_idx]
-
 
 ####### F1TenthTimeTrial Environment #######
 @configclass
@@ -1026,9 +968,9 @@ class TimeTrialCurriculumCfg:
         params={
             "reward_term_name": "vel_rew",
             "increase": 0.0,
-            "first_episode_increase": 25,
-            "episodes_per_increase": 25,
-            "max_num_increases": 10,
+            "first_episode_increase": 50,
+            "episodes_per_increase": 100,
+            "max_num_increases": 0,
         }
     )
 
@@ -1036,10 +978,10 @@ class TimeTrialCurriculumCfg:
         func=increase_reward_weight_over_time,
         params={
             "reward_term_name": "out_of_track",
-            "increase": 1,
+            "increase": 0,
             "first_episode_increase": 50,
             "episodes_per_increase": 50,
-            "max_num_increases": 5,
+            "max_num_increases": 0,
         }
     )
 
@@ -1090,8 +1032,8 @@ def is_reverse(env):
 
 def reverse_waypoint_bool(env):
     # Safe access to buffer with fallback
-    if not hasattr(env, '_last_waypoint_indices'):
-        env._last_waypoint_indices = torch.zeros(env.num_envs, 
+    if not hasattr(env, '_history_waypoint_indices'):
+        env._history_waypoint_indices = torch.zeros(env.num_envs, 
                                                dtype=torch.long,
                                                device=env.device)
         
@@ -1117,13 +1059,13 @@ def reverse_waypoint_bool(env):
     # Handle lap transitions by checking modulo distance
     num_waypoints = len(waypoints)
 
-    progress = current_idx - env._last_waypoint_indices
+    progress = current_idx - env._history_waypoint_indices
     
     # Consider progress if moved forward (even across lap boundary)
     reverse_bool = progress < 0
     
     # Update stored indices
-    env._last_waypoint_indices = current_idx.clone()
+    env._history_waypoint_indices = current_idx.clone()
     
     return reverse_bool
 
@@ -1150,16 +1092,20 @@ class F1TenthTimeTrialTerminationsCfg:
 
 @configclass
 class F1TenthTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
-    """Configuration for the cartpole environment."""
 
+    # These will be overwritten by the rss_cfgs
     seed: int = 42
     num_envs: int = 1
-    env_spacing: float = 0.
+    env_spacing: int = 0
+
+    map_name: str = 'THETRACK'
 
     # Reset config
     events: F1TenthTimeTrialEventsCfg = F1TenthTimeTrialEventsCfg()
+
     # actions: Mushr4WDActionCfg = Mushr4WDActionCfg()
     actions: F1Tenth4WDActionCfg = F1Tenth4WDActionCfg()
+    # actions: LB4WDActionCfg = LB4WDActionCfg()
 
     # MDP settings
     observations: F1TenthTimeTrialObsCfg = F1TenthTimeTrialObsCfg()
@@ -1171,10 +1117,11 @@ class F1TenthTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         super().__post_init__()
+
         # viewer settings
         self.viewer.eye = [10., 0.0, 15.0] 
         self.viewer.lookat = [0.0, 0.0, -3.]
-        self.sim.dt = 0.025
+        self.sim.dt = 0.01
         self.decimation = 8
         self.sim.render_interval = self.decimation
 
@@ -1183,9 +1130,42 @@ class F1TenthTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
 
         self.actions.throttle_steer.scale = (10, 0.488)
 
+
+        #terrain
+        MAP_NAME = self.map_name
+        NUM_ENVS = self.num_envs
+        file_name = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', MAP_NAME+'.usd')
+        maps_folder_path = '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps'    
+        traversability_hashmap, waypoints, outer, inner, d_lat, psi_rad, kappa_radpm, vx_mps, spacing_meters, map_size_pixels = create_maps_from_waypoints(maps_folder_path, MAP_NAME, NUM_ENVS, file_name, resolution=0.1)
+
+        # terrain
+        self.terrain_cfg  = F1TenthTimeTrialTerrainImporterCfg(
+            prim_path="/World/terrain",
+            env_spacing=self.env_spacing,
+            NUM_ENVS=self.num_envs,
+            usd_path=file_name,
+            traversability_hashmap=traversability_hashmap,
+            waypoints = waypoints,
+            outer = outer, 
+            inner = inner,
+            d_lat=d_lat,
+            psi_rad = psi_rad,
+            kappa_radpm=kappa_radpm,
+            vx_mps=vx_mps,
+            spacing_meters=spacing_meters,
+            map_size_pixels=map_size_pixels,
+            # Override or add new terrain parameters
+            MAP_NAME=MAP_NAME,  # Example: Change map name
+            physics_material=sim_utils.RigidBodyMaterialCfg(
+                static_friction=1.1,  # Example: Adjust friction
+                dynamic_friction=1.1,
+            ),
+            debug_vis=True,  # Example: Enable debug visualization
+        )
+
         # Scene settings
         self.scene = F1TenthTimeTrialSceneCfg(
-            num_envs=self.num_envs, env_spacing=self.env_spacing,
+            num_envs=self.num_envs, env_spacing=self.env_spacing, terrain = self.terrain_cfg 
         )
 
         # Set the environment class
@@ -1198,9 +1178,24 @@ class F1TenthTimeTrialEnv(ManagerBasedEnv):
         super().__init__(cfg, **kwargs)
         
         # Then initialize your buffers
-        self._last_waypoint_indices = torch.zeros(self.num_envs, 
+        self._initial_waypoint_indices = torch.zeros(self.num_envs, 
                                                 dtype=torch.long,
                                                 device=self.device)
+
+        self._history_length = 10
+
+        self._history_waypoint_indices = torch.zeros(
+            (self.num_envs, self._history_length),  # Shape: (num_envs, history_length)
+            dtype=torch.long,
+            device=self.device
+        )
+
+        self._reset_env_bool = torch.zeros(  # Tracks where to insert the next index
+            self.num_envs,
+            dtype=torch.bool,
+            device=self.device
+        )
+
         self._current_progress = torch.zeros(self.num_envs,
                                            device=self.device)
 

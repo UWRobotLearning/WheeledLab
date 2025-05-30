@@ -387,11 +387,10 @@ class DriftTerminationsCfg:
 
 @configclass
 class MushrDriftRLEnvCfg(ManagerBasedRLEnvCfg):
-    """Configuration for the cartpole environment."""
 
     seed: int = 42
     num_envs: int = 1024
-    env_spacing: float = 0.
+    env_spacing: float = 2.
 
     # Basic Settings
     observations: BlindObsCfg = BlindObsCfg()

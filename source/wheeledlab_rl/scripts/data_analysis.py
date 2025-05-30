@@ -4,7 +4,7 @@ import numpy as np
 
 # Load the saved data
 
-POLICY = "true-leaf-548"
+POLICY = 'logical-monkey-718'
 
 data_path = "/home/tongo/WheeledLab/source/wheeledlab_rl/logs/"+POLICY+"/playback/play-name-rollouts.pt"
 data = torch.load(data_path)
@@ -16,7 +16,7 @@ time = data['time'].cpu().numpy()
 s_idx = torch.squeeze(data['s_idx']).cpu().numpy()  
 
 start_idx = 0 
-end_idx = 45
+end_idx = 210
 
 plt.figure(figsize=(12, 4))
 for env_idx in range(actions.shape[1]):  # Loop through environments
@@ -39,3 +39,23 @@ plt.title(POLICY+": Selected Observation Features")
 plt.legend()
 plt.grid()
 plt.show()
+
+plt.figure(figsize=(12, 4))
+plt.plot(time[start_idx:end_idx], observations[start_idx:end_idx, 0, 2], label='Last Throttle')  # Adjust indices based on your obs space
+plt.plot(time[start_idx:end_idx], observations[start_idx:end_idx, 0, 3], label='Last Steering')
+plt.xlabel("time [s]")
+plt.ylabel("")
+plt.title(POLICY+": Selected Observation Features")
+plt.legend()
+plt.grid()
+plt.show()
+
+# plt.figure(figsize=(12, 4))
+# plt.plot(time[start_idx:end_idx], observations[start_idx:end_idx, 0, 2], label='Heading Error')  # Adjust indices based on your obs space
+# plt.plot(time[start_idx:end_idx], observations[start_idx:end_idx, 0, 3], label='Deviation Error')
+# plt.xlabel("time [s]")
+# plt.ylabel("")
+# plt.title(POLICY+": Selected Observation Features")
+# plt.legend()
+# plt.grid()
+# plt.show()

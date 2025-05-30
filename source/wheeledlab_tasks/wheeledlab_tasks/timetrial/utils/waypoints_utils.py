@@ -3,9 +3,7 @@
 import torch
 import matplotlib.pyplot as plt
 
-"""
-Storing the traversability hashmap on GPU significantly speeds up querying for traversability
-"""
+
 class WaypointsUtil:
     _instance = None
 

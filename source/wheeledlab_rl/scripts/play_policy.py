@@ -16,7 +16,7 @@ This command will save data and record a video of the playback using an existing
 from wheeledlab_rl.startup import startup
 import argparse
 
-POLICY = "true-leaf-548"
+POLICY = 'logical-monkey-718'
 
 parser = argparse.ArgumentParser(description="Play a policy in WheeledLab.")
 # These arguments assume that a run folder can be found
@@ -26,7 +26,7 @@ parser.add_argument("--checkpoint", type=int, default=None, help="Checkpoint to 
 parser.add_argument("--task", type=str, default=None, help="Task name. Overrides run config env if provided")
 parser.add_argument("--policy-path", type=str, default=None, help="Path to policy file.")
 # Playback
-parser.add_argument("--steps", type=int, default=150, help="Length of recorded video in steps")
+parser.add_argument("--steps", type=int, default=300, help="Length of recorded video in steps")
 # Logging
 parser.add_argument('-sd', "--save-data", action="store_true", default=True, help="Save episode data")
 parser.add_argument("--video", action="store_true", help="Record video of the playback")

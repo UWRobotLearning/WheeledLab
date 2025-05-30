@@ -6,7 +6,7 @@ from isaaclab.envs import ManagerBasedEnv
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.assets import Articulation, RigidObject
 from isaaclab.terrains import TerrainImporter
-
+from ..utils import find_nearest_waypoint
 
 def reset_root_state(
     env: ManagerBasedEnv,
@@ -19,7 +19,7 @@ def reset_root_state(
     terrain: TerrainImporter = env.scene.terrain
 
     # valid_poses = terrain.cfg.generate_poses_from_init_points(env, env_ids)
-    valid_poses = terrain.cfg.generate_random_poses(len(env_ids))
+    valid_poses = terrain.cfg.generate_random_poses(env=env, env_ids=env_ids, num_poses=len(env_ids))
 
     # Tensorizes the valid poses
     posns = torch.stack(list(map(lambda x: torch.tensor(x.pos, device=env.device), valid_poses))).float()
@@ -41,3 +41,38 @@ def reset_root_state(
     asset.write_root_pose_to_sim(torch.cat([positions, orientations], dim=-1), env_ids=env_ids)
     asset.write_root_velocity_to_sim(torch.cat([lin_vels, ang_vels], dim=-1), env_ids=env_ids)
 
+    # new position
+    pos_xy_world = asset.data.root_pos_w[env_ids, :2]
+
+    # Get waypoints (ensure float32 for consistency)
+    waypoints_xy_world = torch.tensor(
+        env.scene.terrain.cfg.waypoints, 
+        device=env.device,
+        dtype=torch.float32
+    )[:, :2]
+
+    inner_xy_world = torch.tensor(
+        env.scene.terrain.cfg.inner, 
+        device=env.device,
+        dtype=torch.float32
+    )[:, :2]
+
+    current_idx, _ = find_nearest_waypoint(inner_xy_world, pos_xy_world)
+    # current_waypoint = waypoints_xy_world[current_idx]
+
+    if not hasattr(env, '_initial_waypoint_indices'):
+        env._initial_waypoint_indices = torch.zeros(env.num_envs, 
+                                                dtype=torch.long,
+                                                device=env.device)
+        
+    if not hasattr(env, '_reset_env_bool'):
+        env._reset_env_bool = torch.ones(  # Tracks where to insert the next index
+            env.num_envs,
+            dtype=torch.bool,
+            device=env.device
+        )
+
+    # set boolean so that it knows it just resetted
+    env._reset_env_bool[env_ids] = torch.ones(len(env_ids), dtype=bool, device=env.device)
+    env._initial_waypoint_indices[env_ids] = current_idx.clone()  
+ 

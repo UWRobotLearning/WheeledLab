@@ -87,24 +87,6 @@ class VisualTerrainImporterCfg(TerrainImporterCfg):
     # num walkers for each sub group
     num_walkers = 1
 
-    ####################################
-    # Debugging map
-    # num_rows = 50
-    # num_cols = 50
-    # map_size = (num_rows, num_cols)
-
-    # # # environments are generated in a grid
-    # env_num_rows = 5
-    # env_num_cols = 5
-    # env_size = (env_num_rows, env_num_cols)
-
-    # # # sub group size
-    # group_num_rows = 1
-    # group_num_cols = 1 
-    # sub_group_size = (group_num_rows, group_num_cols)
-    # # # num walkers for each sub group
-    # num_walkers = 1
-    ####################################
 
     # whether to sample colors
     color_sampling = False
@@ -412,9 +394,10 @@ class VisualTerminationsCfg:
 class MushrVisualRLEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the cartpole environment."""
 
+    
     seed: int = 42
     num_envs: int = 1024
-    env_spacing: float = 0.
+    env_spacing: float = 12
 
     # Reset config
     events: VisualEventsCfg = VisualEventsCfg()

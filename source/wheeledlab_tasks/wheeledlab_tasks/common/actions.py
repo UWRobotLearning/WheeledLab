@@ -21,7 +21,7 @@ class F1Tenth4WDActionCfg:
         base_length=0.365,
         base_width=0.284,
         wheel_radius=0.05,
-        scale=(3.0, 0.488),
+        scale=(10.0, 0.488),
         no_reverse=True,
         bounding_strategy="clip",
         asset_name="robot",
@@ -50,8 +50,30 @@ class Mushr4WDActionCfg:
         asset_name="robot",
     )
 
+@configclass
+class LB4WDActionCfg:
 
-# @configclass
+    throttle_steer = RCCar4WDActionCfg(
+        wheel_joint_names=[
+            "Wheel__Knuckle__Front_Left",
+            "Wheel__Knuckle__Front_Right",
+            "Wheel__Upright__Rear_Right",
+            "Wheel__Upright__Rear_Left"
+        ],
+        steering_joint_names=[
+            "Knuckle__Upright__Front_Right",
+            "Knuckle__Upright__Front_Left",
+        ],
+        base_length=0.34,
+        base_width=0.28,
+        wheel_radius=0.05,
+        scale=(10.0, 0.488),
+        no_reverse=True,
+        bounding_strategy="clip",
+        asset_name="robot",
+    )
+
+# # @configclass
 # class MushrRWDActionCfg:
 
 #     throttle_steer = RCCarRWDActionCfg(

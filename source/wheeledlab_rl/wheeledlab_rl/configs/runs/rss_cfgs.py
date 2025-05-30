@@ -7,10 +7,15 @@ from wheeledlab_rl.configs import (
 @configclass
 class RSS_TEST(RslRlRunConfig):
     env_setup = EnvSetup(
-        num_envs= 1,
+        num_envs=64,
+        env_spacing= 0,
+        map_name = 'THETRACK',
         task_name="Isaac-F1TenthTimeTrialRL-v0"
     )
+    # unique-jazz-683
     train = RLTrainConfig(
+        # load_run=None,
+        # load_run_checkpoint=0,
         num_iterations=1000,
         rl_algo_lib="rsl",
         rl_algo_class="ppo",
@@ -41,20 +46,20 @@ class RSS_TEST(RslRlRunConfig):
 #         entry_point="rsl_rl_cfg_entry_point"
 #     )
 
-# @configclass
-# class RSS_VISUAL_CONFIG(RslRlRunConfig):
-#     env_setup = EnvSetup(
-#         num_envs=512,
-#         task_name="Isaac-MushrVisualRL-v0"
-#     )
-#     train = RLTrainConfig(
-#         num_iterations=5000,
-#         rl_algo_lib="rsl",
-#         rl_algo_class="ppo"
-#     )
-#     agent_setup = AgentSetup(
-#         entry_point="rsl_rl_cfg_entry_point"
-#     )
+@configclass
+class RSS_VISUAL_CONFIG(RslRlRunConfig):
+    env_setup = EnvSetup(
+        num_envs=2,
+        task_name="Isaac-MushrVisualRL-v0"
+    )
+    train = RLTrainConfig(
+        num_iterations=5000,
+        rl_algo_lib="rsl",
+        rl_algo_class="ppo"
+    )
+    agent_setup = AgentSetup(
+        entry_point="rsl_rl_cfg_entry_point"
+    )
 
 # @configclass
 # class RSS_ELEV_CONFIG(RslRlRunConfig):
