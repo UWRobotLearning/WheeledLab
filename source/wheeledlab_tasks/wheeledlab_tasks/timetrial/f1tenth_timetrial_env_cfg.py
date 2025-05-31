@@ -868,7 +868,7 @@ def progress_waypoint_bool(env):
         )
     
     # Get current waypoint
-    position_xy = env.scene["robot"].data.root_pos_w[:, :2]
+    position_xy = mdp.root_pos_w(env)[..., :2]
     waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, device=env.device)[:, :2]
     current_idx, _ = find_nearest_waypoint(waypoints, position_xy)
     num_waypoints = len(waypoints)

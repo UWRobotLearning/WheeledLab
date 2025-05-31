@@ -7,7 +7,7 @@ from wheeledlab_rl.configs import (
 @configclass
 class RSS_TEST(RslRlRunConfig):
     env_setup = EnvSetup(
-        num_envs=3,
+        num_envs=256,
         env_spacing= 15,
         map_name = 'THETRACK',
         task_name="Isaac-F1TenthTimeTrialRL-v0"
