@@ -15,14 +15,35 @@ def create_maps_from_waypoints(maps_folder_path, map_name, num_envs, origin, fil
         yaml_path: Path to the YAML file with metadata (resolution, origin).
         output_usd_path: Output USD file path (e.g., "/path/to/track.usd").
     """
-    # Load YAML metadata
+
+    waypoints_list = []
+    trackbounds_list = []
+    d_lat_list = []
+    psi_rad_list = []
+    kappa_radpm_list = []
+    vx_mps_list = []
+
+    outer_list = []
+    inner_list = []
+
+    hashmap_list = []
+    map_size_meters_list = []
+    map_size_pixels_list = []
+
+    x_min_list = []
+    x_max_list = []
+    y_min_list = []
+    y_max_list = []
+
+    resolution_list = []
+
     map_path = os.path.join(maps_folder_path, map_name)
     yaml_file = map_name+'.yaml'
     png_file = map_name+'.png'
     yaml_path = os.path.join(map_path, yaml_file)
     png_path = os.path.join(map_path, png_file)
     waypoints_path = os.path.join(map_path, 'global_waypoints.json')
-
+    
     #load waypoints coordinates
     waypoints, trackbounds, d_lat, psi_rad, kappa_radpm, vx_mps = load_waypoints(waypoints_path)
     
@@ -40,7 +61,6 @@ def create_maps_from_waypoints(maps_folder_path, map_name, num_envs, origin, fil
     stage_name = file_path
     stage = set_stage_usd(stage_name)
     
-
     # Generate plane
     set_plane_usd(hashmap, origin, map_size_pixels, map_size_meters, stage, x_min, x_max, y_min, y_max, resolution)
     # set_plane_usd_v2(hashmap, env_origins, map_size_pixels, map_size_meters, stage)

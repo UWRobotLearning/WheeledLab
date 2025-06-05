@@ -48,18 +48,29 @@ import omni.usd
 ###### OBSERVATION #######
 ##############################
 
-def base_lin_vel_xy(env: ManagerBasedEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+def base_lin_vel_x(env: ManagerBasedEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"), mean_noise = 0, std_noise = 0) -> torch.Tensor:
     """Root linear velocity in the asset's root frame. 2D, only x and y"""
     # extract the used quantities (to enable type-hinting)
     asset: RigidObject = env.scene[asset_cfg.name]
-    return asset.data.root_lin_vel_b[:,0:2]
+    noise = torch.empty(size=asset.data.root_lin_vel_b[:,0].unsqueeze(-1).shape, device=env.device).normal_(mean=mean_noise, std=std_noise)
 
-def base_ang_vel_z(env: ManagerBasedEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+    return (asset.data.root_lin_vel_b[:,0].unsqueeze(-1) + noise)
+
+def base_lin_vel_y(env: ManagerBasedEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"), mean_noise = 0, std_noise = 0) -> torch.Tensor:
+    """Root linear velocity in the asset's root frame. 2D, only x and y"""
+    # extract the used quantities (to enable type-hinting)
+    asset: RigidObject = env.scene[asset_cfg.name]
+    noise = torch.empty(size=asset.data.root_lin_vel_b[:,1].unsqueeze(-1).shape, device=env.device).normal_(mean=mean_noise, std=std_noise)
+
+    return (asset.data.root_lin_vel_b[:,1].unsqueeze(-1) + noise)
+
+def base_ang_vel_z(env: ManagerBasedEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"), mean_noise = 0, std_noise = 0) -> torch.Tensor:
     """Root angular velocity in the asset's root frame. Only z, yaw rade"""
     # extract the used quantities (to enable type-hinting)
     asset: RigidObject = env.scene[asset_cfg.name]
+    noise = torch.empty(size=asset.data.root_ang_vel_b[:,2].unsqueeze(-1).shape, device=env.device).normal_(mean=mean_noise, std=std_noise)
 
-    return asset.data.root_ang_vel_b[:,2].unsqueeze(-1)
+    return asset.data.root_ang_vel_b[:,2].unsqueeze(-1) + noise
 
 def deviation_from_waypoints(
     env: ManagerBasedEnv, 
@@ -78,7 +89,7 @@ def deviation_from_waypoints(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world =mdp.root_pos_w(env)[..., :2]
+    pos_xy_world = asset.data.root_pos_w[:, :2]
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
@@ -137,7 +148,7 @@ def heading_error_from_waypoints(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = mdp.root_pos_w(env)[..., :2]
+    pos_xy_world = asset.data.root_pos_w[:, :2]
     heading_w = asset.data.heading_w
     
     # Get waypoints (ensure float32 for consistency)
@@ -197,7 +208,7 @@ def deviation_centerline_horizon(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = mdp.root_pos_w(env)[..., :2]
+    pos_xy_world = asset.data.root_pos_w[:, :2]
     
     # Get waypoints
     waypoints_xy_world = torch.tensor(
@@ -268,7 +279,7 @@ def heading_error_horizon(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = mdp.root_pos_w(env)[..., :2]
+    pos_xy_world = asset.data.root_pos_w[:, :2]
     heading_w = asset.data.heading_w
     
     # Get waypoints
@@ -331,7 +342,7 @@ def d_lat_horizon(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = mdp.root_pos_w(env)[..., :2]
+    pos_xy_world = asset.data.root_pos_w[:, :2]
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
@@ -390,7 +401,7 @@ def kappa_radpm_horizon(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = mdp.root_pos_w(env)[..., :2]
+    pos_xy_world = asset.data.root_pos_w[:, :2]
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
@@ -449,7 +460,7 @@ def vx_mps_horizon(
     """
     # Get current state
     asset = env.scene[asset_cfg.name]
-    pos_xy_world = mdp.root_pos_w(env)[..., :2]
+    pos_xy_world = asset.data.root_pos_w[:, :2]
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
@@ -489,6 +500,7 @@ def vx_mps_horizon(
 
 HORIZON = 10
 LOOKAHEAD = 15
+
 @configclass
 class F1TenthTimeTrialObsCfg:
     """Observation specifications for the environment."""
@@ -498,12 +510,28 @@ class F1TenthTimeTrialObsCfg:
         [vx, vy, vz, wx, wy, wz, action1(vel), action2(steering)]
         """
         # lidar = ObsTerm(func=mdp_sensors.lidar_ranges, params={"sensor_cfg":SceneEntityCfg("lidar")})
-        base_lin_vel_xy = ObsTerm(func=base_lin_vel_xy, noise=Unoise(n_min=-.0, n_max=.0))
-        base_ang_vel_z = ObsTerm(func=base_ang_vel_z, noise=Unoise(n_min=-.0, n_max=.0))
+        base_lin_vel_x = ObsTerm(
+            func=base_lin_vel_x, 
+            params={'mean_noise': 0,
+                    'std_noise': 0.0}            
+            )
+
+        base_lin_vel_x = ObsTerm(
+            func=base_lin_vel_y, 
+            params={'mean_noise': 0,
+                    'std_noise': 0.00}            
+            )
+                
+        base_ang_vel_z = ObsTerm(
+            func=base_ang_vel_z, 
+            params={'mean_noise': 0,
+                    'std_noise': 0.1}         
+            )
+        
         last_action = ObsTerm(
             func=mdp.last_action,
             clip=(-1., 1.), # TODO: get from ClipAction wrapper
-            noise=Unoise(0, 0)
+            noise=Unoise(n_min=-.1, n_max=.1, operation='add')
         )
 
         heading_error = ObsTerm(
