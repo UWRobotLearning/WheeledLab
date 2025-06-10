@@ -19,6 +19,18 @@ class TraversabilityHashmapUtil:
             self.traversability_hashmap = None
             self.num_plots = 0
 
+            self.num_rows_list = []
+            self.num_cols_list = []
+            self.row_spacing_list = []
+            self.col_spacing_list = []
+            self.traversability_hashmap_list = []
+            self.width_list = []
+            self.height_list = []
+            self.origin_list = []
+
+            self.device = None
+
+
     def plot_traversability_hashmap(self):
         if self.traversability_hashmap is None:
             raise ValueError("Traversability hashmap is not set.")
@@ -63,27 +75,58 @@ class TraversabilityHashmapUtil:
         self.origin = origin
         self.device = None
 
+
+    def add_traversability_hashmap(self, i, traversability_hashmap, map_size, spacing, origin):
+
+        # ugly, but at least the length of the list is reset everytime
+        if i == 0:
+            self.num_rows_list = []
+            self.num_cols_list = []
+            self.row_spacing_list = []
+            self.col_spacing_list = []
+            self.traversability_hashmap_list = []
+            self.width_list = []
+            self.height_list = []
+            self.origin_list = []
+
+        self.num_rows_list.append(map_size[0])
+        self.num_cols_list.append(map_size[1])
+        self.row_spacing_list.append(spacing[0])
+        self.col_spacing_list.append(spacing[1])
+        self.traversability_hashmap_list.append(traversability_hashmap)
+        self.width_list.append(map_size[0]*spacing[0])
+        self.height_list.append(map_size[1]*spacing[1])
+        self.origin_list.append(origin)
+
     """
     Get traversability value of an x, y coordinate
     """
-    def get_traversability(self, poses : torch.Tensor):
-        if self.traversability_hashmap is None:
+    def get_traversability(self, poses : torch.Tensor, map_lvl=0):
+        if len(self.traversability_hashmap_list) == 0:
             return torch.ones(poses.shape[0], device=poses.device)
 
         if self.device is None:
-            self.traversability_hashmap = torch.tensor(self.traversability_hashmap, device=poses.device)
+            # self.traversability_hashmap = torch.tensor(self.traversability_hashmap, device=poses.device)
+            self.traversability_hashmap_list = torch.tensor(self.traversability_hashmap_list, device=poses.device)
+
             self.device = poses.device
         
-        xs, ys = poses[:, 0], poses[:, 1]
-        x_idx, y_idx = self.get_map_id(xs, ys)
-        return self.traversability_hashmap[y_idx, x_idx]
+        origin = self.origin_list[map_lvl]
+        traversability_hashmap = self.traversability_hashmap_list[map_lvl]
+
+        xs = poses[:, 0] - origin[0], 
+        ys = poses[:, 1] - origin[1],
+        x_idx, y_idx = self.get_map_idx(xs, ys, map_lvl)
+
+        return traversability_hashmap[y_idx, x_idx].clone().detach().to(dtype=torch.bool)    
     
     """
     Helper function to get the map id given x, y coordinates
     """
-    def get_map_id(self, x, y):
-        x_idx = ((x + self.width/2.0 + self.row_spacing/2.0) / self.row_spacing).long()
-        y_idx = ((y + self.height/2 + self.col_spacing/2) / self.col_spacing).long()
-        x_idx = torch.clamp(x_idx, 0, self.num_rows-1)
-        y_idx = torch.clamp(y_idx, 0, self.num_cols-1)
+    def get_map_idx(self, x, y, map_lvl):
+        x_idx = ((x[0] + self.width_list[map_lvl]/2 + self.row_spacing_list[map_lvl]/2) / self.row_spacing_list[map_lvl]).long()
+        y_idx = ((y[0] + self.height_list[map_lvl]/2 + self.col_spacing_list[map_lvl]/2) / self.col_spacing_list[map_lvl]).long()
+        x_idx = torch.clamp(x_idx, 0, self.num_rows_list[map_lvl]-1)
+        y_idx = torch.clamp(y_idx, 0, self.num_cols_list[map_lvl]-1)
+        
         return x_idx, y_idx

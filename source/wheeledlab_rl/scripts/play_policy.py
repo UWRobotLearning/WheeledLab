@@ -16,7 +16,7 @@ This command will save data and record a video of the playback using an existing
 from wheeledlab_rl.startup import startup
 import argparse
 
-POLICY = 'logical-monkey-718'
+POLICY = 'atomic-thunder-772'
 
 parser = argparse.ArgumentParser(description="Play a policy in WheeledLab.")
 # These arguments assume that a run folder can be found

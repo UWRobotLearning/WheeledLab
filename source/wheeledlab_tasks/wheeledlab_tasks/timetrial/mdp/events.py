@@ -18,6 +18,11 @@ def reset_root_state(
     asset: RigidObject | Articulation = env.scene[asset_cfg.name]
     terrain: TerrainImporter = env.scene.terrain
 
+    if not hasattr(env, '_map_levels'):
+        env._map_levels = torch.zeros(env.num_envs, 
+                                    dtype=torch.long,
+                                    device=env.device)
+        
     # valid_poses = terrain.cfg.generate_poses_from_init_points(env, env_ids)
     valid_poses = terrain.cfg.generate_random_poses(env=env, env_ids=env_ids, num_poses=len(env_ids))
 
@@ -46,13 +51,13 @@ def reset_root_state(
 
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
-        env.scene.terrain.cfg.waypoints, 
+        env.scene.terrain.cfg.waypoints_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
 
     inner_xy_world = torch.tensor(
-        env.scene.terrain.cfg.inner, 
+        env.scene.terrain.cfg.inner_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]

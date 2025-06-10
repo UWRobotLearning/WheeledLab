@@ -1,6 +1,8 @@
 from collections import Counter
 import os
 import time
+from datetime import datetime
+
 import torch
 import random
 import numpy as np
@@ -37,7 +39,7 @@ from wheeledlab_tasks.common import Mushr4WDActionCfg
 from wheeledlab_tasks.common import F1Tenth4WDActionCfg, LB4WDActionCfg
 from .disable_lidar import disable_all_lidars
 
-from .utils import create_maps_from_waypoints, generate_random_poses, TraversabilityHashmapUtil, find_nearest_waypoint 
+from .utils import create_maps_from_waypoints, generate_random_poses, generate_random_poses_from_list, TraversabilityHashmapUtil, find_nearest_waypoint 
 from . import mdp_sensors
 from .mdp import reset_root_state
 
@@ -93,13 +95,13 @@ def deviation_from_waypoints(
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
-        env.scene.terrain.cfg.waypoints, 
+        env.scene.terrain.cfg.waypoints_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
 
     inner_xy_world = torch.tensor(
-        env.scene.terrain.cfg.inner, 
+        env.scene.terrain.cfg.inner_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
@@ -153,13 +155,13 @@ def heading_error_from_waypoints(
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
-        env.scene.terrain.cfg.waypoints, 
+        env.scene.terrain.cfg.waypoints_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
     
     inner_xy_world = torch.tensor(
-        env.scene.terrain.cfg.inner, 
+        env.scene.terrain.cfg.inner_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
@@ -210,15 +212,17 @@ def deviation_centerline_horizon(
     asset = env.scene[asset_cfg.name]
     pos_xy_world = asset.data.root_pos_w[:, :2]
     
+    
+
     # Get waypoints
     waypoints_xy_world = torch.tensor(
-        env.scene.terrain.cfg.waypoints,
+        env.scene.terrain.cfg.waypoints_list[0],
         device=env.device,
         dtype=torch.float32
     )[:, :2]
     
     inner_xy_world = torch.tensor(
-        env.scene.terrain.cfg.inner,
+        env.scene.terrain.cfg.inner_list[0],
         device=env.device,
         dtype=torch.float32
     )[:, :2]
@@ -284,13 +288,13 @@ def heading_error_horizon(
     
     # Get waypoints
     waypoints_xy_world = torch.tensor(
-        env.scene.terrain.cfg.waypoints, 
+        env.scene.terrain.cfg.waypoints_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
     
     inner_xy_world = torch.tensor(
-        env.scene.terrain.cfg.inner,
+        env.scene.terrain.cfg.inner_list[0],
         device=env.device,
         dtype=torch.float32
     )[:, :2]
@@ -346,19 +350,19 @@ def d_lat_horizon(
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
-        env.scene.terrain.cfg.waypoints, 
+        env.scene.terrain.cfg.waypoints_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
     
     inner_xy_world = torch.tensor(
-        env.scene.terrain.cfg.inner, 
+        env.scene.terrain.cfg.inner_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
 
     d_lat = torch.tensor(
-        env.scene.terrain.cfg.d_lat, 
+        env.scene.terrain.cfg.d_lat_list[0], 
         device=env.device,
         dtype=torch.float32
     )
@@ -405,19 +409,19 @@ def kappa_radpm_horizon(
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
-        env.scene.terrain.cfg.waypoints, 
+        env.scene.terrain.cfg.waypoints_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
     
     inner_xy_world = torch.tensor(
-        env.scene.terrain.cfg.inner, 
+        env.scene.terrain.cfg.inner_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
 
     kappa_radpm = torch.tensor(
-        env.scene.terrain.cfg.kappa_radpm, 
+        env.scene.terrain.cfg.kappa_radpm_list[0], 
         device=env.device,
         dtype=torch.float32
     )
@@ -464,19 +468,19 @@ def vx_mps_horizon(
     
     # Get waypoints (ensure float32 for consistency)
     waypoints_xy_world = torch.tensor(
-        env.scene.terrain.cfg.waypoints, 
+        env.scene.terrain.cfg.waypoints_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
     
     inner_xy_world = torch.tensor(
-        env.scene.terrain.cfg.inner, 
+        env.scene.terrain.cfg.inner_list[0], 
         device=env.device,
         dtype=torch.float32
     )[:, :2]
 
     vx_mps = torch.tensor(
-        env.scene.terrain.cfg.vx_mps, 
+        env.scene.terrain.cfg.vx_mps_list[0], 
         device=env.device,
         dtype=torch.float32
     )
@@ -525,7 +529,7 @@ class F1TenthTimeTrialObsCfg:
         base_ang_vel_z = ObsTerm(
             func=base_ang_vel_z, 
             params={'mean_noise': 0,
-                    'std_noise': 0.1}         
+                    'std_noise': 0.0}         
             )
         
         last_action = ObsTerm(
@@ -586,50 +590,47 @@ class InitialPoseCfg:
 
 @configclass
 class F1TenthTimeTrialTerrainImporterCfg(TerrainImporterCfg):
-    # map generation parameters
-
-    # generate a colored plane geometry
-    NUM_ENVS  = 5
-    MAP_NAME = 'f'
-    file_name = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', 'preinit.usd')
-    maps_folder_path = '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps' 
-    origin = [0, 0, 0]   
-    traversability_hashmap, waypoints, outer, inner, d_lat, psi_rad, kappa_radpm, vx_mps, spacing_meters, map_size_pixels = create_maps_from_waypoints(maps_folder_path, MAP_NAME, NUM_ENVS, origin, file_name, resolution=0.1)
-
-    spacing = spacing_meters
-    row_spacing, col_spacing = spacing
-
-    num_cols, num_rows = map_size_pixels
-    map_size = (num_rows+1, num_cols+1)
-
-    # environments size are generated in a grid
-    env_size = map_size
-
-    width = num_rows * row_spacing
-    height = num_cols * col_spacing
-    
-    """
-    traversability_hashmap is a 2D numpy array of traversability values, 1.0 or 0.0
-    shape: [num_rows, num_cols]
-    """
+    # Declare variables without initialization
+    MAP_NAME_list: list = None
+    traversability_hashmap_list: list = None
+    waypoints_list: list = None
+    outer_list: list = None
+    inner_list: list = None
+    d_lat_list: list = None
+    psi_rad_list: list = None
+    kappa_radpm_list: list = None
+    vx_mps_list: list = None
+    spacing_meters_list: list = None
+    map_size_pixels_list: list = None
+    row_spacing_list: list = None
+    col_spacing_list: list = None
+    num_cols_list: list = None
+    num_rows_list: list = None
+    width_list: list = None
+    height_list: list = None
+    origin_list: list = None
+    # Other configurations that don't depend on runtime values
     env_spacing = 0
-
     prim_path = "/World/ground"
-    terrain_type="usd"
-    usd_path = file_name
+    terrain_type = "usd"
+    usd_path = None  # Will be set in post_init
     collision_group = -1
-    physics_material=sim_utils.RigidBodyMaterialCfg(
+    physics_material = sim_utils.RigidBodyMaterialCfg(
         friction_combine_mode="multiply",
         restitution_combine_mode="multiply",
         static_friction=1.1,
         dynamic_friction=1.1,
     )
-    debug_vis=False
+    debug_vis = False
     
     def generate_random_poses(self, env : ManagerBasedEnv, env_ids, num_poses):
+        
         # generate random initial poses with margin
         env_origins = env.scene.env_origins
-        init_poses = generate_random_poses(env_origins, env_ids, num_poses, self.row_spacing, self.col_spacing, self.traversability_hashmap, self.waypoints, self.outer, self.inner, margin=0.1)
+        map_levels = env._map_levels
+        # add which map level
+
+        init_poses = generate_random_poses_from_list(env_ids, num_poses, map_levels, env_origins, self.origin_list, self.row_spacing_list, self.col_spacing_list, self.traversability_hashmap_list, self.waypoints_list, self.outer_list, self.inner_list, margin=0.1)
         valid_init_poses = [
             InitialPoseCfg(
                 pos=(x, y, 0.02),
@@ -642,22 +643,22 @@ class F1TenthTimeTrialTerrainImporterCfg(TerrainImporterCfg):
     """
     Get traversability value of an x, y coordinate
     """
-    def get_traversability(self, poses):
-        traversability = []
-        xs, ys = poses[:, 0], poses[:, 1]
-        x_idx, y_idx = self.get_map_id(xs, ys)
-        traversability = torch.tensor(self.traversability_hashmap).to(x_idx.device)[x_idx, y_idx]
-        return traversability
+    # def get_traversability(self, poses):
+    #     traversability = []
+    #     xs, ys = poses[:, 0], poses[:, 1]
+    #     x_idx, y_idx = self.get_map_id(xs, ys)
+    #     traversability = torch.tensor(self.traversability_hashmap).to(x_idx.device)[x_idx, y_idx]
+    #     return traversability
     
     """
     Helper function to get the map id given x, y coordinates
     """
-    def get_map_id(self, x, y):
-        x_idx = torch.floor((x + self.width/2 - self.row_spacing/2) / self.row_spacing).long()
-        y_idx = torch.floor((y + self.height/2 - self.col_spacing/2) / self.col_spacing).long()
-        x_idx = torch.clamp(x_idx, 0, self.num_rows-1)
-        y_idx = torch.clamp(y_idx, 0, self.num_cols-1)
-        return x_idx, y_idx
+    # def get_map_id(self, x, y):
+    #     x_idx = torch.floor((x + self.width/2 - self.row_spacing/2) / self.row_spacing).long()
+    #     y_idx = torch.floor((y + self.height/2 - self.col_spacing/2) / self.col_spacing).long()
+    #     x_idx = torch.clamp(x_idx, 0, self.num_rows-1)
+    #     y_idx = torch.clamp(y_idx, 0, self.num_cols-1)
+    #     return x_idx, y_idx
 
 
 @configclass
@@ -685,7 +686,7 @@ class F1TenthTimeTrialSceneCfg(InteractiveSceneCfg):
     # # Add light configuration
     light = AssetBaseCfg(
         prim_path="/World/light",
-        spawn=sim_utils.DistantLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
+        spawn=sim_utils.DistantLightCfg(color=(0.9, 0.9, 0.1), intensity=1000.0),
     )
 
     robot: AssetBaseCfg = F1TENTH_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
@@ -711,7 +712,7 @@ def store_data(
     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
 ):
     asset: RigidObject = env.scene[asset_cfg.name]
-    waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, 
+    waypoints = torch.tensor(env.scene.terrain.cfg.waypoints_list[0], 
                         device=env.device)[:, :2]
     position_xy = mdp.root_pos_w(env)[..., :2]
 
@@ -816,17 +817,17 @@ class F1TenthTimeTrialEventsRandomCfg(F1TenthTimeTrialEventsCfg):
 ######################
 def is_traversable(env):
     poses =mdp.root_pos_w(env)[..., :2]
-    traversability = TraversabilityHashmapUtil().get_traversability(poses)
+    traversability = TraversabilityHashmapUtil().get_traversability(poses, 0)
     return torch.where(traversability, 1., 0.)
 
 def traversable_reward(env):
     poses =mdp.root_pos_w(env)[..., :2]
-    traversability = TraversabilityHashmapUtil().get_traversability(poses)
+    traversability = TraversabilityHashmapUtil().get_traversability(poses, 0)
     return torch.where(traversability, 1, 0.)
 
 def out_of_track_penalty(env):
     poses =mdp.root_pos_w(env)[..., :2]
-    traversability = TraversabilityHashmapUtil().get_traversability(poses)
+    traversability = TraversabilityHashmapUtil().get_traversability(poses, 0)
     return torch.where(traversability, 0., -1.)
 
 def bool_is_not_traversable(env):
@@ -851,7 +852,7 @@ def upright_penalty(env, thresh_deg):
 def vel_rew_trav(env, speed_target_on_trav: float=1., speed_target_on_non_trav: float=2.):
     poses =mdp.root_pos_w(env)[..., :2]
     terrain = env.scene[SceneEntityCfg("terrain").name]
-    traversability = TraversabilityHashmapUtil().get_traversability(poses)
+    traversability = TraversabilityHashmapUtil().get_traversability(poses, 0)
     speed_target = torch.where(traversability, speed_target_on_trav, speed_target_on_non_trav)
 
     lin_vel = mdp.base_lin_vel(env)
@@ -897,7 +898,11 @@ def progress_waypoint_bool(env):
     
     # Get current waypoint
     position_xy = mdp.root_pos_w(env)[..., :2]
-    waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, device=env.device)[:, :2]
+
+    waypoints = torch.tensor(
+        env.scene.terrain.cfg.waypoints_list[0], 
+        device=env.device)[:, :2]
+    
     current_idx, _ = find_nearest_waypoint(waypoints, position_xy)
     num_waypoints = len(waypoints)
 
@@ -994,8 +999,8 @@ def out_of_map(env):
     poses = mdp.root_pos_w(env)
     poses = poses[..., :2]
     terrain = env.scene[SceneEntityCfg("terrain").name]
-    width = terrain.cfg.width
-    height = terrain.cfg.height
+    width = terrain.cfg.width_list[0]
+    height = terrain.cfg.height_list[0]
     x_out_range = torch.logical_or(poses[..., 0] > width / 2, poses[..., 0] < -width / 2)
     y_out_range = torch.logical_or(poses[..., 1] > height / 2, poses[..., 1] < -height / 2)
     return torch.logical_or(x_out_range, y_out_range)
@@ -1007,8 +1012,7 @@ def upright_bool(env, thresh_deg):
 
 def is_not_traversable(env):
     poses =mdp.root_pos_w(env)[..., :2]
-    traversability = TraversabilityHashmapUtil().get_traversability(poses)
-
+    traversability = TraversabilityHashmapUtil().get_traversability(poses, 0)
     num_episodes = env.common_step_counter // env.max_episode_length
     # delay the termination for the first 10 episodes
     # if num_episodes < 10:
@@ -1033,10 +1037,10 @@ def reverse_waypoint_bool(env):
     
     # Get current positions and waypoints
     position_xy = env.scene["robot"].data.root_pos_w[:, :2]
-    # waypoints = torch.tensor(env.scene.terrain.cfg.waypoints, 
+    # waypoints = torch.tensor(env.scene.terrain.cfg.waypoints_list[0], 
     #                        device=env.device)[:, :2]
 
-    waypoints = torch.tensor(env.scene.terrain.cfg.inner, 
+    waypoints = torch.tensor(env.scene.terrain.cfg.inner_list[0], 
                            device=env.device)[:, :2]
     
     # Find nearest waypoint
@@ -1088,7 +1092,7 @@ class F1TenthTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
     num_envs: int = 1
     env_spacing: int = 0
 
-    map_name: str = 'THETRACK'
+    map_name: str = ['THETRACK', 'GLC_smile_small']
 
     # Reset config
     events: F1TenthTimeTrialEventsCfg = F1TenthTimeTrialEventsCfg()
@@ -1117,81 +1121,58 @@ class F1TenthTimeTrialRLEnvCfg(ManagerBasedRLEnvCfg):
 
         # Terminations config
         self.episode_length_s = 15
-
-        self.actions.throttle_steer.scale = (10, 0.488)
+        self.actions.throttle_steer.scale = (12, 0.488)
 
 
         #terrain
-        MAP_NAME = self.map_name
+        MAP_NAME_list = self.map_name
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        file_name = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', MAP_NAME+'.usd')
-
-        origin = [0, 0, 0]
-
-        NUM_ENVS = self.num_envs
+        stage_path = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', timestamp + '_test.usd')
+        origin_list = [[0, 0], [12.5, 0], [0, 20]]
 
         maps_folder_path = '/home/tongo/WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/timetrial/utils/maps'    
 
-        traversability_hashmap, waypoints, outer, inner, d_lat, psi_rad, kappa_radpm, vx_mps, spacing_meters, map_size_pixels = create_maps_from_waypoints(maps_folder_path, MAP_NAME, NUM_ENVS, origin, file_name, resolution=0.1)
+        traversability_hashmap_list, waypoints_list, outer_list, inner_list, d_lat_list, psi_rad_list, kappa_radpm_list, vx_mps_list, spacing_meters_list, map_size_pixels_list  = create_maps_from_waypoints(maps_folder_path, MAP_NAME_list, origin_list, stage_path, resolution=0.1)
 
-        # terrain
-        self.terrain  = F1TenthTimeTrialTerrainImporterCfg(
+        # Calculate derived values
+        row_spacing_list = np.array(spacing_meters_list)[:, 0].tolist()
+        col_spacing_list = np.array(spacing_meters_list)[:, 1].tolist()
+        num_cols_list = np.array(map_size_pixels_list)[:, 0].tolist()
+        num_rows_list = np.array(map_size_pixels_list)[:, 1].tolist()
+        width_list = (np.array(num_rows_list) * np.array(row_spacing_list)).tolist()
+        height_list = (np.array(num_cols_list) * np.array(col_spacing_list)).tolist()
+
+        # Create terrain config
+        self.terrain = F1TenthTimeTrialTerrainImporterCfg(
             prim_path="/World/envs/env_.*",
             env_spacing=self.env_spacing,
-            NUM_ENVS=self.num_envs,
-            usd_path=file_name,
-            traversability_hashmap=traversability_hashmap,
-            waypoints = waypoints,
-            outer = outer, 
-            inner = inner,
-            d_lat=d_lat,
-            psi_rad = psi_rad,
-            kappa_radpm=kappa_radpm,
-            vx_mps=vx_mps,
-            spacing_meters=spacing_meters,
-            map_size_pixels=map_size_pixels,
-            origin=origin,
-            # Override or add new terrain parameters
-            MAP_NAME=MAP_NAME,  # Example: Change map name
+            usd_path=stage_path,
+            MAP_NAME_list=MAP_NAME_list,
+            traversability_hashmap_list=traversability_hashmap_list,
+            waypoints_list=waypoints_list,
+            outer_list=outer_list,
+            inner_list=inner_list,
+            d_lat_list=d_lat_list,
+            psi_rad_list=psi_rad_list,
+            kappa_radpm_list=kappa_radpm_list,
+            vx_mps_list=vx_mps_list,
+            spacing_meters_list=spacing_meters_list,
+            map_size_pixels_list=map_size_pixels_list,
+            row_spacing_list=row_spacing_list,
+            col_spacing_list=col_spacing_list,
+            num_cols_list=num_cols_list,
+            num_rows_list=num_rows_list,
+            width_list=width_list,
+            height_list=height_list,
+            origin_list=origin_list,
             physics_material=sim_utils.RigidBodyMaterialCfg(
-                static_friction=1.1,  # Example: Adjust friction
+                static_friction=1.1,
                 dynamic_friction=1.1,
             ),
-            debug_vis=True,  # Example: Enable debug visualization
+            debug_vis=True,
         )
 
-
-        # MAP_NAME_1 = 'GLC_smile_small'
-        # file_name_1 = os.path.join(WHEELEDLAB_ASSETS_DATA_DIR, 'maps', MAP_NAME_1+'.usd')
-        # origin_1 = [10, 0, 0]
-        # traversability_hashmap_1, waypoints_1, outer_1, inner_1, d_lat_1, psi_rad_1, kappa_radpm_1, vx_mps_1, spacing_meters_1, map_size_pixels_1 = create_maps_from_waypoints(maps_folder_path, MAP_NAME_1, NUM_ENVS, origin_1, file_name_1, resolution=0.1)
-
-        # self.terrain_1  = F1TenthTimeTrialTerrainImporterCfg(
-        #     prim_path="/World/terrain_1",
-        #     env_spacing=self.env_spacing,
-        #     NUM_ENVS=self.num_envs,
-        #     usd_path=file_name_1,
-        #     traversability_hashmap=traversability_hashmap_1,
-        #     waypoints = waypoints_1,
-        #     outer = outer_1, 
-        #     inner = inner_1,
-        #     d_lat=d_lat_1,
-        #     psi_rad = psi_rad_1,
-        #     kappa_radpm=kappa_radpm_1,
-        #     vx_mps=vx_mps_1,
-        #     spacing_meters=spacing_meters_1,
-        #     map_size_pixels=map_size_pixels_1,
-        #     origin=origin_1,
-        #     # Override or add new terrain parameters
-        #     MAP_NAME='f',  # Example: Change map name
-        #     physics_material=sim_utils.RigidBodyMaterialCfg(
-        #         static_friction=1.1,  # Example: Adjust friction
-        #         dynamic_friction=1.1,
-        #     ),
-        #     debug_vis=True,  # Example: Enable debug visualization
-        # )
-
-        # Scene settings
         self.scene = F1TenthTimeTrialSceneCfg(
             num_envs=self.num_envs, env_spacing=self.env_spacing, terrain = self.terrain
         )
@@ -1227,6 +1208,9 @@ class F1TenthTimeTrialEnv(ManagerBasedEnv):
         self._current_progress = torch.zeros(self.num_envs,
                                            device=self.device)
 
+        self._map_levels = torch.zeros(self.num_envs, 
+                                    dtype=torch.long,
+                                    device=self.device)
 
 @configclass
 class F1TenthTimeTrialRLRandomEnvCfg(F1TenthTimeTrialRLEnvCfg):

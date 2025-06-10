@@ -4,7 +4,7 @@ import numpy as np
 
 # Load the saved data
 
-POLICY = 'logical-monkey-718'
+POLICY = 'atomic-thunder-772'
 
 data_path = "/home/tongo/WheeledLab/source/wheeledlab_rl/logs/"+POLICY+"/playback/play-name-rollouts.pt"
 data = torch.load(data_path)

@@ -11,6 +11,8 @@ import json
 import yaml
 from PIL import Image
 
+import time
+
 def compute_origins(num_envs, env_size):
     # If no environments are needed, return an empty list
     env_length = env_size[0]
@@ -43,6 +45,85 @@ def compute_origins(num_envs, env_size):
     origins = list(zip(j * env_length, i * env_length))
     
     return origins
+
+def get_min_map_size(outer, resolution):
+    """Create square boolean hashmap of drivable areas."""
+    # Create grid that fully contains outer boundary
+    x_min, y_min = np.min(outer, axis=0)
+    x_max, y_max = np.max(outer, axis=0)
+    
+    # Add small buffer to ensure outer boundary is fully contained
+    buffer = resolution * 5
+    x_min -= buffer
+    y_min -= buffer
+    x_max += buffer
+    y_max += buffer
+    
+    # Calculate initial dimensions
+    length_meters = x_max - x_min
+    height_meters = y_max - y_min
+    min_map_size = max(length_meters, height_meters)
+    
+    return min_map_size
+
+def create_square_drivable_map_v2(min_map_size, outer, inner, resolution=0.5):
+    """Create square boolean hashmap of drivable areas."""
+    # Create grid that fully contains outer boundary
+    x_min, y_min = np.min(outer, axis=0)
+    x_max, y_max = np.max(outer, axis=0)
+    
+    # # Add small buffer to ensure outer boundary is fully contained
+    buffer = resolution * 5
+    x_min -= buffer
+    y_min -= buffer
+    x_max += buffer
+    y_max += buffer
+    
+    # # Calculate initial dimensions
+    # length_meters = x_max - x_min
+    # height_meters = y_max - y_min
+    
+    # Make dimensions square by expanding the smaller dimension
+    min_map_size = min_map_size
+    center_x = (x_min + x_max) / 2
+    center_y = (y_min + y_max) / 2
+    
+    # Adjust bounds to create square
+    x_min = center_x - min_map_size/2
+    x_max = center_x + min_map_size/2
+    y_min = center_y - min_map_size/2
+    y_max = center_y + min_map_size/2
+    
+    # Calculate square dimensions in meters
+    map_size_meters = (min_map_size, min_map_size)  # (height, length) - now equal
+    
+    # Calculate grid dimensions in pixels (now square)
+    n_pixels = int(np.ceil(min_map_size / resolution)) + 1
+    map_size_pixels = [n_pixels, n_pixels]  # (n_rows, n_cols) - now equal
+    
+    # Create grid coordinates
+    x = np.linspace(x_min, x_max, n_pixels)
+    y = np.linspace(y_min, y_max, n_pixels)
+    grid_x, grid_y = np.meshgrid(x, y)
+    
+    # Create paths for polygon checks
+    outer_path = Path(outer)
+    inner_path = Path(inner)
+    
+    # Check each grid point
+    points = np.column_stack((grid_x.ravel(), grid_y.ravel()))
+    in_outer = outer_path.contains_points(points)
+    in_inner = inner_path.contains_points(points)
+    
+    # Drivable = inside outer AND outside inner
+    drivable = (in_outer & ~in_inner).reshape(grid_x.shape)
+    
+    return (drivable, 
+            map_size_meters, 
+            map_size_pixels, 
+            (x_min, x_max), 
+            (y_min, y_max), 
+            resolution)
 
 def create_square_drivable_map(outer, inner, resolution=0.5):
     """Create square boolean hashmap of drivable areas."""
@@ -77,7 +158,7 @@ def create_square_drivable_map(outer, inner, resolution=0.5):
     
     # Calculate grid dimensions in pixels (now square)
     n_pixels = int(np.ceil(max_dim / resolution)) + 1
-    map_size_pixels = (n_pixels, n_pixels)  # (n_rows, n_cols) - now equal
+    map_size_pixels = [n_pixels, n_pixels]  # (n_rows, n_cols) - now equal
     
     # Create grid coordinates
     x = np.linspace(x_min, x_max, n_pixels)
@@ -116,20 +197,21 @@ def set_stage_usd(file_path):
     stage.SetDefaultPrim(xform.GetPrim())
     return stage
 
-def set_plane_usd(hashmap, origin, map_size_pixels, map_size_meters, stage, x_min, x_max, y_min, y_max, resolution):
-    plane = UsdGeom.Mesh.Define(stage, '/World/plane')
+def set_hashmap_usd(map_name, hashmap, origin, map_size_pixels, map_size_meters, stage, x_min, x_max, y_min, y_max, resolution):
+    plane = UsdGeom.Mesh.Define(stage, '/World/'+ map_name+'/hashmap')
     # Create vertices 
     xs = np.linspace(
-        -map_size_meters[1]/2,
-        map_size_meters[1]/2,
+        -map_size_meters[1]/2 + origin[0],
+        map_size_meters[1]/2 + origin[0],
         map_size_pixels[1]
     )
     ys = np.linspace(
-        -map_size_meters[0]/2,
-        map_size_meters[0]/2,
+        -map_size_meters[0]/2 + origin[1],
+        map_size_meters[0]/2 + origin[1],
         map_size_pixels[0]
     )
     xx, yy = np.meshgrid(xs, ys)
+
     vertices = [(x, y, 0) for x, y in zip(xx.ravel(), yy.ravel())]
     # Create faces (same as your original code)
     faces = []
@@ -157,66 +239,190 @@ def set_plane_usd(hashmap, origin, map_size_pixels, map_size_meters, stage, x_mi
     plane.GetFaceVertexIndicesAttr().Set(faces)
     plane.CreateDisplayColorPrimvar(UsdGeom.Tokens.uniform).Set(face_colors_triangle)
 
-def set_plane_usd_v2(hashmap, env_origins, map_size_pixels, map_size_meters, stage):
-    assert hashmap.shape == (map_size_pixels[0], map_size_pixels[1]), "Hashmap dimensions mismatch"
+# def set_multiple_planes_usd(hashmap_list, map_size_pixels_list, 
+#                           map_size_meters_list, stage, x_min_list, x_max_list, 
+#                           y_min_list, y_max_list, resolution_list):
+#     """
+#     Create multiple planes in USD, placed side by side along the x-axis.
     
-    for i, (x_offset, y_offset) in enumerate(env_origins):
-        env_path = f"/World/env_{i}/plane"  # More conventional path
-        plane = UsdGeom.Mesh.Define(stage, env_path)
+#     Args:
+#         All arguments are now lists containing data for each map
+#     """
+#     # Initialize combined data structures
+#     all_vertices = []
+#     all_faces = []
+#     all_face_counts = []
+#     all_face_colors = []
+    
+#     # Track current x offset for placing maps
+#     current_offset = 0
+    
+#     for i, (hashmap, map_size_pixels, map_size_meters) in enumerate(zip(
+#         hashmap_list, map_size_pixels_list, map_size_meters_list)):
         
-        # Create vertices (offset applied ONLY here)
-        xs = np.linspace(
-            -map_size_meters[1]/2 + x_offset,
-            map_size_meters[1]/2 + x_offset,
-            map_size_pixels[1]
-        )
-        ys = np.linspace(
-            -map_size_meters[0]/2 + y_offset,
-            map_size_meters[0]/2 + y_offset,
-            map_size_pixels[0]
-        )
-        xx, yy = np.meshgrid(xs, ys)
-        vertices = [(x, y, 0) for x, y in zip(xx.ravel(), yy.ravel())]
-
-
-        faces = []
-        face_counts = []
-        for row in range(map_size_pixels[0] - 1):
-            for col in range(map_size_pixels[1] - 1):
-                v0 = row * map_size_pixels[1] + col
-                v1 = v0 + 1
-                v2 = v0 + map_size_pixels[1]
-                v3 = v2 + 1
-                faces += [v0, v1, v2, v2, v1, v3]
-                face_counts += [3, 3]
+#         # Calculate this map's dimensions
+#         map_width = map_size_meters[1]
+#         map_height = map_size_meters[0]
         
-        colors = [Gf.Vec3f(0, 0, 0), Gf.Vec3f(1, 1, 1)]
-        face_colors = [
-            colors[int(hashmap[row, col])] 
-            for row in range(map_size_pixels[0] - 1)
-            for col in range(map_size_pixels[1] - 1)
-        ]
-        face_colors_triangle = [c for color_pair in zip(face_colors, face_colors) for c in color_pair]
+#         # Create vertices for this map with x offset
+#         xs = np.linspace(
+#             - map_width/2,
+#              map_width/2,
+#             map_size_pixels[1]
+#         )
+#         ys = np.linspace(
+#             current_offset - map_height/2,
+#             current_offset + map_height/2,
+#             map_size_pixels[0]
+#         )
+#         xx, yy = np.meshgrid(xs, ys)
         
-        plane.GetPointsAttr().Set(vertices)
-        plane.GetFaceVertexCountsAttr().Set(face_counts)
-        plane.GetFaceVertexIndicesAttr().Set(faces)
-        plane.CreateDisplayColorPrimvar(UsdGeom.Tokens.uniform).Set(face_colors_triangle)
+#         # Store current vertex count before adding new ones
+#         prev_vertex_count = len(all_vertices)
+        
+#         # Add vertices for this map
+#         all_vertices.extend([(x, y, 0) for x, y in zip(xx.ravel(), yy.ravel())])
+        
+#         # Create faces for this map with adjusted indices
+#         for row in range(map_size_pixels[0] - 1):
+#             for col in range(map_size_pixels[1] - 1):
+#                 v0 = prev_vertex_count + row * map_size_pixels[1] + col
+#                 v1 = v0 + 1
+#                 v2 = v0 + map_size_pixels[1]
+#                 v3 = v2 + 1
+#                 all_faces += [v0, v1, v2, v2, v1, v3]
+#                 all_face_counts += [3, 3]
+        
+#         # Create face colors for this map
+#         colors = [Gf.Vec3f(0, 0, 0), Gf.Vec3f(1, 1, 1)]  # Black, White
+#         for row in range(map_size_pixels[0] - 1):
+#             for col in range(map_size_pixels[1] - 1):
+#                 all_face_colors.append(colors[int(hashmap[row, col])])
+        
+#         # Update x offset for next map
+#         current_x_offset += map_width
+    
+#     # Double colors for triangles (same as original)
+#     all_face_colors_triangle = [c for color_pair in zip(all_face_colors, all_face_colors) for c in color_pair]
+    
+#     # Create the combined plane mesh
+#     plane = UsdGeom.Mesh.Define(stage, '/World/combined_plane')
+#     plane.GetPointsAttr().Set(all_vertices)
+#     plane.GetFaceVertexCountsAttr().Set(all_face_counts)
+#     plane.GetFaceVertexIndicesAttr().Set(all_faces)
+#     plane.CreateDisplayColorPrimvar(UsdGeom.Tokens.uniform).Set(all_face_colors_triangle)
+
+# def set_multiple_points_usd(points_list, name_list, map_size_meters_list, 
+#                            stage, color_list, x_min_list, y_min_list):
+#     """
+#     Create multiple point sets in USD, placed with the same x-axis offsets as the planes.
+    
+#     Args:
+#         points_list: List of point arrays for each map
+#         name_list: List of names for each point set
+#         origin_list: List of origin coordinates for each map
+#         map_size_meters_list: List of map sizes in meters for each map
+#         stage: USD stage
+#         color_list: List of colors for each point set
+#         x_min_list: List of x_min values for each map
+#         y_min_list: List of y_min values for each map
+#     """
+#     # Track current x offset for placing points (must match plane placement)
+#     current_x_offset = 0
+#     all_points_prims = []
+    
+#     for i, (points, name, map_size_meters, x_min, y_min) in enumerate(zip(
+#         points_list, name_list, map_size_meters_list, x_min_list, y_min_list)):
+        
+#         # Calculate this map's width
+#         map_width = map_size_meters[1]
+        
+#         # Transform points with the same offset logic as planes
+#         points_usd = [
+#             Gf.Vec3f(
+#                 wp[0] + current_x_offset - map_size_meters[1]/2 - x_min,  # X with offset
+#                 wp[1] - map_size_meters[0]/2 - y_min,                      # Y (no x-offset needed)
+#                 0.1  # Slight Z offset to appear above plane
+#             ) 
+#             for wp in points
+#         ]
+        
+#         # Create points prim
+#         points_prim = UsdGeom.Points.Define(stage, f'/World/{name}_{i}')
+#         points_prim.GetPointsAttr().Set(points_usd)
+        
+#         # Visual styling
+#         points_prim.CreateWidthsAttr().Set([0.1] * len(points_usd))
+#         points_prim.CreateDisplayColorPrimvar(UsdGeom.Tokens.constant).Set(color)
+#         points_prim.CreateVisibilityAttr().Set(UsdGeom.Tokens.inherited)
+        
+#         all_points_prims.append(points_prim)
+        
+#         # Update x offset for next map (must match plane placement)
+#         current_x_offset += map_width
+    
+#     return all_points_prims
+
+# def set_plane_usd_v2(hashmap, env_origins, map_size_pixels, map_size_meters, stage):
+#     assert hashmap.shape == (map_size_pixels[0], map_size_pixels[1]), "Hashmap dimensions mismatch"
+    
+#     for i, (x_offset, y_offset) in enumerate(env_origins):
+#         env_path = f"/World/env_{i}/plane"  # More conventional path
+#         plane = UsdGeom.Mesh.Define(stage, env_path)
+        
+#         # Create vertices (offset applied ONLY here)
+#         xs = np.linspace(
+#             -map_size_meters[1]/2 + x_offset,
+#             map_size_meters[1]/2 + x_offset,
+#             map_size_pixels[1]
+#         )
+#         ys = np.linspace(
+#             -map_size_meters[0]/2 + y_offset,
+#             map_size_meters[0]/2 + y_offset,
+#             map_size_pixels[0]
+#         )
+#         xx, yy = np.meshgrid(xs, ys)
+#         vertices = [(x, y, 0) for x, y in zip(xx.ravel(), yy.ravel())]
 
 
-def set_points_usd(points, name, origin, map_size_meters, stage, color, x_min, y_min):
+#         faces = []
+#         face_counts = []
+#         for row in range(map_size_pixels[0] - 1):
+#             for col in range(map_size_pixels[1] - 1):
+#                 v0 = row * map_size_pixels[1] + col
+#                 v1 = v0 + 1
+#                 v2 = v0 + map_size_pixels[1]
+#                 v3 = v2 + 1
+#                 faces += [v0, v1, v2, v2, v1, v3]
+#                 face_counts += [3, 3]
+        
+#         colors = [Gf.Vec3f(0, 0, 0), Gf.Vec3f(1, 1, 1)]
+#         face_colors = [
+#             colors[int(hashmap[row, col])] 
+#             for row in range(map_size_pixels[0] - 1)
+#             for col in range(map_size_pixels[1] - 1)
+#         ]
+#         face_colors_triangle = [c for color_pair in zip(face_colors, face_colors) for c in color_pair]
+        
+#         plane.GetPointsAttr().Set(vertices)
+#         plane.GetFaceVertexCountsAttr().Set(face_counts)
+#         plane.GetFaceVertexIndicesAttr().Set(faces)
+#         plane.CreateDisplayColorPrimvar(UsdGeom.Tokens.uniform).Set(face_colors_triangle)
+
+
+def set_points_usd(points, map_name, points_name, origin, map_size_meters, stage, color, x_min, y_min):
     points_usd = [
         Gf.Vec3f(
-            wp[0]+(-map_size_meters[1]/2-x_min),  # X: Apply resolution and shift
-            wp[1]+(-map_size_meters[0]/2-y_min),  # Y
+            wp[0]+(-map_size_meters[1]/2-x_min) + origin[0],  # X: Apply resolution and shift
+            wp[1]+(-map_size_meters[0]/2-y_min) + origin[1],  # Y
             0.0                          # Z offset
         ) 
         for wp in points
     ]
-    points_prim = UsdGeom.Points.Define(stage, '/World/' + name)
+    points_prim = UsdGeom.Points.Define(stage, '/World/'+ map_name +'/'+ points_name)
     points_prim.GetPointsAttr().Set(points_usd)
     # Visual stylin
-    points_prim.CreateWidthsAttr().Set([0.1] * len(points_usd))  # 20cm diameter points
+    points_prim.CreateWidthsAttr().Set([0.1] * len(points_usd))  # 10cm diameter points
     points_prim.CreateDisplayColorPrimvar(UsdGeom.Tokens.constant).Set(color)  # Red
     points_prim.CreateVisibilityAttr().Set(UsdGeom.Tokens.inherited)
     return points_usd
