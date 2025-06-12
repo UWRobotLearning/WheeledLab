@@ -13,55 +13,17 @@ Environments, assets, workflow for open-source mobile robotics, integrated with 
 
 [Website](https://uwrobotlearning.github.io/WheeledLab/) | [Paper](https://arxiv.org/abs/2502.07380)
 
-## Installing IsaacLab (~20 min)
+## Installation
 
-Note: Only use this pip installation approach if you're on Ubuntu 22.04+ or Windows. For Ubuntu 20.04, install from the binaries. [link](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html)
+If you have not already, please install [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
-WheeledLab is built atop Isaac Lab. If you do not yet have Isaac Lab installed, it is open-source and installation instructions for Isaac Sim v4.5.0 and Isaac Lab v2.0.2 can be found below:
-
-```bash
-# Create a conda environment named WL and install Isaac Sim v4.5.0 in it:
-conda create -n WL python=3.10
-conda activate WL
-pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121 # Or `pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu118` for CUDA 11
-pip install --upgrade pip
-pip install 'isaacsim[all,extscache]==4.5.0' --extra-index-url https://pypi.nvidia.com
-
-# Install Isaac Lab v2.0.2 (make sure you have build dependencies first, e.g. `sudo apt install cmake build-essential` on ubuntu)
-git clone --branch v2.0.2 https://github.com/isaac-sim/IsaacLab.git
-./isaaclab.sh -i
-```
-
-Source: https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/index.html
-
-If you already have IsaacLab you can skip this and instead head [here](#create-new-isaaclab-conda-environment) to set up a new conda environment for this repository.
-
-### Create New IsaacLab Conda Environment
-
-We recommend setting up a new [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) environment to include both `IsaacLab` packages and `WheeledLab` packages. You can do this using Isaac Lab's convenient setup scripts:
+You can install WheeledLab (with IsaacLab/IsaacSim) using the following command:
 
 ```bash
-cd <IsaacLab>
-./isaaclab.sh --conda WL
-conda activate WL
-./isaaclab.sh -i
+cd WheeledLab
+uv sync
+source .venv/bin/activate
 ```
-
-## Installing WheeledLab (~5 min)
-
-```bash
-# Activate the conda environment that was created via the IsaacLab setup.
-conda activate <your IsaacLab env here> # 'WL' if you followed instructions above
-
-git clone git@github.com:UWRobotLearning/WheeledLab.git
-cd WheeledLab/source
-pip install -e wheeledlab
-pip install -e wheeledlab_tasks
-pip install -e wheeledlab_assets
-pip install -e wheeledlab_rl
-```
-
-After this, we recommend [Setting Up VSCode](https://github.com/UWRobotLearning/WheeledLab?tab=readme-ov-file#training-quick-start).
 
 ## Training Quick Start
 

@@ -1,23 +1,23 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"] # Specify build system dependencies
-build-backend = "setuptools.build_meta"   # Specify the build backend (setuptools)
-backend-path = ["."] # Specifies that the backend is in the project root, can be omitted if setup.py is not used with complex logic
+requires = ["setuptools>=61.0", "wheel"] 
+build-backend = "setuptools.build_meta"  
+backend-path = ["."] 
 
 [project]
-name = "wheeledlab-suite"  # Name of the package
-version = "0.1.0"          # Version of the package
+name = "wheeledlab-suite" 
+version = "0.1.0"         
 description = "A comprehensive suite for wheeled robot simulation and reinforcement learning based on Isaac Lab."
-readme = "README.md"       # Path to the README file
-requires-python = "~=3.10" # Minimum Python version required
-license = { text = "MIT" } # License information
-keywords = ["isaaclab", "robotics", "simulation", "reinforcement learning", "wheeled robots"] # Keywords for discoverability
+readme = "README.md"      
+requires-python = "~=3.10" 
+license = { text = "MIT" } 
+keywords = ["isaaclab", "robotics", "simulation", "reinforcement learning", "wheeled robots"] 
 authors = [
-    { name = "Wheeled Lab Project Developers" } # Author information
+    { name = "Wheeled Lab Project Developers" } 
 ]
 maintainers = [
-    { name = "Wheeled Lab Project Developers" } # Maintainer information
+    { name = "Wheeled Lab Project Developers" } 
 ]
-classifiers = [ # PyPI classifiers
+classifiers = [ 
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
@@ -26,7 +26,7 @@ classifiers = [ # PyPI classifiers
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
-dependencies = [ # Core dependencies for the project
+dependencies = [ 
     "isaacsim[all,extscache]==4.5.0",
     "torch==2.5.1",
     "torchvision==0.20.1",
@@ -52,20 +52,10 @@ isaaclab = { index = "nvidia" }
 index-strategy = "unsafe-best-match"
 
 [tool.setuptools]
-# Tells setuptools that top-level packages are in the 'source' directory
 package-dir = {"" = "source"}
-# To include non-Python data files (like .usd, .json, etc.)
-# Option 1: Use include-package-data = true and a MANIFEST.in file
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["source"]  # Look for packages in the 'source' directory
-# Include all packages starting with these names, recursively
+where = ["source"]  
 include = ["wheeledlab*", "wheeledlab_assets*", "wheeledlab_rl*", "wheeledlab_tasks*"]
-# Alternatively, to only include top-level packages:
-# packages = ["wheeledlab", "wheeledlab_assets", "wheeledlab_rl", "wheeledlab_tasks"]
 
-# Option 2: Specify package_data directly (more explicit for simple cases)
-# [tool.setuptools.package-data]
-# "wheeledlab_assets" = ["*.usd", "data/**/*"] # Example: include all .usd files and everything under data/ in wheeledlab_assets
-# "wheeledlab_tasks" = ["config/**/*.yaml", "config/**/*.json"] # Example for task config files
