@@ -40,7 +40,7 @@ def create_maps_from_waypoints(maps_folder_path, map_name_list, origin_list, sta
     # Set stage
     stage_name = stage_path
     stage = set_stage_usd(stage_name)
-    origin_list = [[0, 0], [12.5, 0], [0, 20]]
+    # origin_list = [[0, 0], [12.5, 0], [0, 20]]
     
     min_common_square_size = 0
 
@@ -125,6 +125,7 @@ def generate_random_poses_from_list(env_ids, num_poses, map_levels, env_origins,
     # Initialize output containers
     all_xs_shifted = np.zeros(len(env_ids))
     all_ys_shifted = np.zeros(len(env_ids))
+    current_wps_idx = np.zeros(len(env_ids))
     all_angles = np.zeros(len(env_ids))
     
     # Process each unique map_level separately among the requested environments
@@ -158,9 +159,10 @@ def generate_random_poses_from_list(env_ids, num_poses, map_levels, env_origins,
         inner_xy = torch.tensor(inner_usd_list[map_level])[:, :2].to(torch.float32)
 
         # Vectorized angle computation
-        positions = torch.stack([torch.tensor(xs), torch.tensor(ys)], dim=1)
+        positions = torch.stack([torch.tensor(xs), torch.tensor(ys)], dim=1) + torch.tensor(map_origin_list[map_level][:2])
         current_indices, _ = find_nearest_waypoint(inner_xy, positions)
-        
+        current_wps_idx[env_mask] = current_indices
+
         # Compute angles for all positions at once
         lookahead = 5
         next_indices = (current_indices + lookahead) % len(inner_xy)
@@ -183,7 +185,7 @@ def generate_random_poses_from_list(env_ids, num_poses, map_levels, env_origins,
     # Combine results while maintaining original order
     poses = list(zip(all_xs_shifted.tolist(), all_ys_shifted.tolist(), all_angles.tolist()))
     
-    return poses
+    return poses, current_wps_idx
 
 def generate_random_poses(env_origins, env_ids, num_poses, row_spacing, col_spacing, traversability_hashmap, waypoints_usd, outer_usd, inner_usd, margin=0.1):
     """

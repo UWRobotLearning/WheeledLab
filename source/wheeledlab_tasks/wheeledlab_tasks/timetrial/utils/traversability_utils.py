@@ -98,35 +98,77 @@ class TraversabilityHashmapUtil:
         self.height_list.append(map_size[1]*spacing[1])
         self.origin_list.append(origin)
 
-    """
-    Get traversability value of an x, y coordinate
-    """
-    def get_traversability(self, poses : torch.Tensor, map_lvl=0):
+
+
+    def get_traversability(self, poses: torch.Tensor, map_levels: torch.Tensor):
+        """
+        Get traversability values for multiple agents, each potentially on different maps.
+        
+        Args:
+            poses: Tensor of shape [num_agents, 2] containing (x,y) positions
+            map_levels: Tensor of shape [num_agents] containing map level for each agent
+            
+        Returns:
+            Tensor of shape [num_agents] with traversability values
+        """
         if len(self.traversability_hashmap_list) == 0:
             return torch.ones(poses.shape[0], device=poses.device)
 
-        if self.device is None:
-            # self.traversability_hashmap = torch.tensor(self.traversability_hashmap, device=poses.device)
-            self.traversability_hashmap_list = torch.tensor(self.traversability_hashmap_list, device=poses.device)
-
-            self.device = poses.device
+        # Convert to tensor if needed
+        if isinstance(map_levels, int):
+            map_levels = torch.full((poses.shape[0],), map_levels, device=poses.device)
         
-        origin = self.origin_list[map_lvl]
-        traversability_hashmap = self.traversability_hashmap_list[map_lvl]
+        if self.device is None:
+            self.traversability_hashmap_list = [torch.tensor(m, device=poses.device) for m in self.traversability_hashmap_list]
+            self.device = poses.device
 
-        xs = poses[:, 0] - origin[0], 
-        ys = poses[:, 1] - origin[1],
-        x_idx, y_idx = self.get_map_idx(xs, ys, map_lvl)
+        # Initialize output
+        traversability = torch.zeros(poses.shape[0], device=poses.device, dtype=torch.bool)
+        
+        # Process each unique map level
+        unique_map_levels = torch.unique(map_levels)
+        for map_level in unique_map_levels:
+            mask = (map_levels == map_level)
+            if not mask.any():
+                continue
+                
+            # Get map-specific parameters
+            origin = self.origin_list[map_level]
+            traversability_hashmap = self.traversability_hashmap_list[map_level]
+            map_level_poses = poses[mask]
+            
+            # Calculate coordinates
+            xs = map_level_poses[:, 0] - origin[0]
+            ys = map_level_poses[:, 1] - origin[1]
+            
+            # Get indices
+            x_idx, y_idx = self.get_map_idx(xs, ys, map_level)
+            
+            # Store results
+            traversability[mask] = traversability_hashmap[y_idx, x_idx].clone().detach().to(dtype=torch.bool)
+        
+        return traversability
 
-        return traversability_hashmap[y_idx, x_idx].clone().detach().to(dtype=torch.bool)    
-    
-    """
-    Helper function to get the map id given x, y coordinates
-    """
-    def get_map_idx(self, x, y, map_lvl):
-        x_idx = ((x[0] + self.width_list[map_lvl]/2 + self.row_spacing_list[map_lvl]/2) / self.row_spacing_list[map_lvl]).long()
-        y_idx = ((y[0] + self.height_list[map_lvl]/2 + self.col_spacing_list[map_lvl]/2) / self.col_spacing_list[map_lvl]).long()
-        x_idx = torch.clamp(x_idx, 0, self.num_rows_list[map_lvl]-1)
-        y_idx = torch.clamp(y_idx, 0, self.num_cols_list[map_lvl]-1)
+    def get_map_idx(self, x: torch.Tensor, y: torch.Tensor, map_level: int):
+        """
+        Get map indices for coordinates, handling multiple map levels.
+        
+        Args:
+            x: Tensor of x coordinates
+            y: Tensor of y coordinates
+            map_levels: Integer map level (all coordinates must be from same map)
+            
+        Returns:
+            Tuple of (x_idx, y_idx) tensors
+        """
+        # Calculate indices
+        x_idx = ((x + self.width_list[map_level]/2 + self.row_spacing_list[map_level]/2) / 
+                self.row_spacing_list[map_level]).long()
+        y_idx = ((y + self.height_list[map_level]/2 + self.col_spacing_list[map_level]/2) / 
+                self.col_spacing_list[map_level]).long()
+        
+        # Clamp to valid range
+        x_idx = torch.clamp(x_idx, 0, self.num_rows_list[map_level]-1)
+        y_idx = torch.clamp(y_idx, 0, self.num_cols_list[map_level]-1)
         
         return x_idx, y_idx

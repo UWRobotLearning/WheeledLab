@@ -16,7 +16,7 @@ This command will save data and record a video of the playback using an existing
 from wheeledlab_rl.startup import startup
 import argparse
 
-POLICY = 'atomic-thunder-772'
+POLICY = 'revived-durian-924'
 
 parser = argparse.ArgumentParser(description="Play a policy in WheeledLab.")
 # These arguments assume that a run folder can be found
@@ -26,7 +26,7 @@ parser.add_argument("--checkpoint", type=int, default=None, help="Checkpoint to 
 parser.add_argument("--task", type=str, default=None, help="Task name. Overrides run config env if provided")
 parser.add_argument("--policy-path", type=str, default=None, help="Path to policy file.")
 # Playback
-parser.add_argument("--steps", type=int, default=300, help="Length of recorded video in steps")
+parser.add_argument("--steps", type=int, default=500, help="Length of recorded video in steps")
 # Logging
 parser.add_argument('-sd', "--save-data", action="store_true", default=True, help="Save episode data")
 parser.add_argument("--video", action="store_true", help="Record video of the playback")
@@ -151,7 +151,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg): # TODO: Add SB3 config suppo
         with torch.inference_mode():
             # agent stepping
             actions = policy(obs)
-            # actions = torch.clip(actions, min=env.action_space.low, max=env.action_space.high)
+            actions = torch.clip(actions, min=env.action_space.low, max=env.action_space.high)
             # env stepping
             obs, _, _, extras = env.step(actions)
         # save data
@@ -159,7 +159,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg, agent_cfg): # TODO: Add SB3 config suppo
         data['actions'].append(actions)
         data['s_idx'].append(extras['s_idx'])
         data['time'].append(extras['time'])
-    data['s_idx_max'].append(extras['s_idx_max'])
+        data['s_idx_max'].append(extras['s_idx_max'])
     ###
 
     ########################

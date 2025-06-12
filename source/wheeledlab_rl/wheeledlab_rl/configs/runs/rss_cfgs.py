@@ -8,7 +8,7 @@ from wheeledlab_rl.configs import (
 class RSS_TEST(RslRlRunConfig):
     env_setup = EnvSetup(
         num_envs=64,
-        env_spacing= 25,
+        env_spacing= 60,
         map_name = 'THETRACK',
         task_name="Isaac-F1TenthTimeTrialRL-v0"
     )
@@ -16,11 +16,11 @@ class RSS_TEST(RslRlRunConfig):
     train = RLTrainConfig(
         # load_run=None,
         # load_run_checkpoint=0,
-        num_iterations=1000,
+        num_iterations=5000,
         rl_algo_lib="rsl",
         rl_algo_class="ppo",
         log=LogConfig(
-            video_interval=15000
+            video_interval=50000
         ),
     )
     agent_setup = AgentSetup(
