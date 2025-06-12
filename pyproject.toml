@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"] 
+build-backend = "setuptools.build_meta"  
+backend-path = ["."] 
+
+[project]
+name = "wheeledlab-suite" 
+version = "0.1.0"         
+description = "A comprehensive suite for wheeled robot simulation and reinforcement learning based on Isaac Lab."
+readme = "README.md"      
+requires-python = "~=3.10" 
+license = { text = "MIT" } 
+keywords = ["isaaclab", "robotics", "simulation", "reinforcement learning", "wheeled robots"] 
+authors = [
+    { name = "Wheeled Lab Project Developers" } 
+]
+maintainers = [
+    { name = "Wheeled Lab Project Developers" } 
+]
+classifiers = [ 
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [ 
+    "isaacsim[all,extscache]==4.5.0",
+    "torch==2.5.1",
+    "torchvision==0.20.1",
+    "isaaclab[isaacsim,all]==2.0.2",
+    "psutil>=5.9.8",
+    "av>=14.4.0",
+    "rich>=14.0.0",
+    "rsl-rl-lib>=2.3.0",
+]
+
+[[tool.uv.index]]
+name = "nvidia"
+url  = "https://pypi.nvidia.com"
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+
+[tool.uv.sources]
+isaaclab = { index = "nvidia" }
+
+[tool.uv]
+index-strategy = "unsafe-best-match"
+
+[tool.setuptools]
+package-dir = {"" = "source"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["source"]  
+include = ["wheeledlab*", "wheeledlab_assets*", "wheeledlab_rl*", "wheeledlab_tasks*"]
+

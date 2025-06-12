@@ -1,0 +1,14 @@
+# MANIFEST.in
+# Include all files in the wheeledlab_assets/data directory and its subdirectories
+graft source/wheeledlab_assets/data
+
+# Include all files in the wheeledlab_tasks/config directory and its subdirectories
+graft source/wheeledlab_tasks/config
+
+# Include all .usd files within the source/wheeledlab_assets directory, recursively
+recursive-include source/wheeledlab_assets *.usd
+
+# You can add more specific rules if needed, for example:
+# recursive-include source/wheeledlab_assets/data/Robots *.usd
+# recursive-include source/wheeledlab_assets/data/Terrains *.usd
+# recursive-include source/wheeledlab_tasks/config/agents *.py
