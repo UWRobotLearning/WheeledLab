@@ -1,5 +1,3 @@
-# pyproject.toml
-
 [build-system]
 requires = ["setuptools>=61.0", "wheel"] # Specify build system dependencies
 build-backend = "setuptools.build_meta"   # Specify the build backend (setuptools)
@@ -10,7 +8,7 @@ name = "wheeledlab-suite"  # Name of the package
 version = "0.1.0"          # Version of the package
 description = "A comprehensive suite for wheeled robot simulation and reinforcement learning based on Isaac Lab."
 readme = "README.md"       # Path to the README file
-requires-python = ">=3.10" # Minimum Python version required
+requires-python = "~=3.10" # Minimum Python version required
 license = { text = "MIT" } # License information
 keywords = ["isaaclab", "robotics", "simulation", "reinforcement learning", "wheeled robots"] # Keywords for discoverability
 authors = [
@@ -25,27 +23,33 @@ classifiers = [ # PyPI classifiers
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11", # If supported
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
 dependencies = [ # Core dependencies for the project
-    "psutil",
-    "rich",
-    "av",
+    "isaacsim[all,extscache]==4.5.0",
+    "torch==2.5.1",
+    "torchvision==0.20.1",
+    "isaaclab[isaacsim,all]==2.0.2",
+    "psutil>=5.9.8",
+    "av>=14.4.0",
+    "rich>=14.0.0",
     "rsl-rl-lib>=2.3.0",
-    # "isaaclab", # Assuming isaaclab is pre-installed in the target environment. Add if it needs to be an explicit dependency.
 ]
 
-[project.urls] # URLs related to the project
-Homepage = "https://github.com/UWRobotLearning/WheeledLab"
-Repository = "https://github.com/UWRobotLearning/WheeledLab"
-# Documentation = "URL_TO_YOUR_DOCUMENTATION" # If you have separate documentation
+[[tool.uv.index]]
+name = "nvidia"
+url  = "https://pypi.nvidia.com"
 
-# Optional: Define command-line scripts
-# [project.scripts]
-# wheeledlab-play = "wheeledlab_rl.scripts.play_policy:main" # Example script, adjust module and function
-# wheeledlab-train = "wheeledlab_rl.scripts.train_rl:main"   # Example script, adjust module and function
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+
+[tool.uv.sources]
+isaaclab = { index = "nvidia" }
+
+[tool.uv]
+index-strategy = "unsafe-best-match"
 
 [tool.setuptools]
 # Tells setuptools that top-level packages are in the 'source' directory
