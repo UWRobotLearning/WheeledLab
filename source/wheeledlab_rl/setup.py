@@ -17,6 +17,7 @@ INSTALL_REQUIRES = [
     "rich",
     "av",
     "rsl-rl-lib>=2.3.0",
+    "gymnasium==1.0.0",
 ]
 
 # Installation operation
