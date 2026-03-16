@@ -1,8 +1,8 @@
 import torch
 import numpy as np
 import noise
-
-from dataclasses import MISSING
+from scipy.ndimage import gaussian_filter1d, distance_transform_edt
+from scipy.interpolate import splprep, splev, griddata
 
 import isaaclab.sim as sim_utils
 import isaaclab.utils.math as math_utils
@@ -25,11 +25,6 @@ from isaaclab.managers import (
     ObservationTermCfg as ObsTerm,
     CurriculumTermCfg as CurrTerm,
     SceneEntityCfg,
-)
-
-from isaaclab.utils.noise import (
-    AdditiveUniformNoiseCfg as Unoise,
-    AdditiveGaussianNoiseCfg as Gnoise,
 )
 
 from isaaclab.envs import ManagerBasedEnv
@@ -102,12 +97,13 @@ class ElevationObsCfg:
 #########################
 
 #==== SUBTERRAIN CFGS ====
-
 @configclass
 class NoiseHfCfg(HfTerrainBaseCfg):
     """Config for noise-based terrain generation."""
 
     generate_roads: bool = True
+    road_num_nodes: int = 10                        # increase for gnarlier roads
+    road_width_range:tuple[float, float] = (.2, .5) # width is narrower at high difficulty
     octaves: int = 3                                # layers of noise; increase for more complex terrain
     freq: float = 250.0                             # higher = smoother/wider hills
 
@@ -138,129 +134,69 @@ class NoiseHfCfg(HfTerrainBaseCfg):
         )
     }
 
-
-def add_roads_v2(hf, difficulty, horizontal_scale, vertical_scale):
-    """Returns a new hf with a road."""    
-    # === Setup ===
+def add_roads(hf, difficulty, horizontal_scale, num_nodes, road_width_range):
     rows, cols = hf.shape
-    num_nodes = 20
-    road_width_px = (0.5 - 0.2 * difficulty) / horizontal_scale
+    road_width_px = (road_width_range[1] - difficulty * (road_width_range[1] - road_width_range[0])) / horizontal_scale
     shoulder_width_px = 10.0
-    hf = hf.astype(float)
-
+    
     # === Random walk ===
-    current_row = rows / 2 # road starts from center for now
-    current_col = cols / 2
+    current_row, current_col = rows / 2, cols / 2 # road starts from center for now
     heading = np.random.uniform(0, 2 * np.pi)
-
     step_dist = rows * 0.8 / num_nodes
     key_pts = [[current_row, current_col]]
 
     for _ in range(num_nodes - 1):
         best_heading = heading
         min_effort = float("inf")
-
         candidates = np.linspace(-np.pi / 4, np.pi / 4, 5)
 
         for angle_off in candidates:
-            test_h = heading + angle_off
-
-            test_row = current_row + step_dist * np.sin(test_h)
-            test_col = current_col + step_dist * np.cos(test_h)
-
-            test_row = np.clip(test_row, 0, rows - 1)
-            test_col = np.clip(test_col, 0, cols - 1)
-
-            target_z = hf[int(test_row), int(test_col)]
-            current_z = hf[int(current_row), int(current_col)]
-
-            effort = abs(target_z - current_z)
+            test_heading = heading + angle_off
+            test_row = np.clip(current_row + step_dist * np.sin(test_heading), 0, rows - 1)
+            test_col = np.clip(current_col + step_dist * np.cos(test_heading), 0, cols - 1)
 
             # try to keep road near center
-            dist_to_center = np.sqrt(
-                (test_row - rows / 2)**2 +
-                (test_col - cols / 2)**2
-            )
-            effort += dist_to_center * 0.01
+            effort = abs(hf[int(test_row), int(test_col)] - hf[int(current_row), int(current_col)])
+            effort += np.sqrt((test_row - rows/2)**2 + (test_col - cols/2)**2) * 0.01 
 
             if effort < min_effort:
-                min_effort = effort
-                best_heading = test_h
+                min_effort, best_heading = effort, test_heading
 
         heading = best_heading
 
         current_row += step_dist * np.sin(heading)
         current_col += step_dist * np.cos(heading)
-
         if (current_col >= cols or current_row >= rows):
             break
-
         key_pts.append([current_row, current_col])
 
-    # === Smooth corners ===
     key_pts = np.array(key_pts)
 
-    dense_path = []
-    for i in range(len(key_pts) - 1):
-        segment = np.linspace(key_pts[i], key_pts[i + 1], 200)
-        dense_path.append(segment[:-1])
+    # === Spline path ===
+    tck, _ = splprep([key_pts[:,0], key_pts[:,1]], s=0)
+    u = np.linspace(0, 1, 500)
+    path_row, path_col = splev(u, tck)
+    path = np.stack([np.clip(path_row, 0, rows-1), np.clip(path_col, 0, cols-1)], axis=1)
 
-    path = np.concatenate(dense_path)
+    # === Smooth elevation along road & shoulder ===
+    road_z = hf[path[:,0].astype(int), path[:,1].astype(int)]
+    road_z = gaussian_filter1d(road_z, sigma=10)
 
-    window = int(100 * (1.0 - 0.2 * difficulty))
-    window = max(window, 5)
+    road_mask = np.zeros((rows, cols), dtype=bool)
+    road_mask[path[:,0].astype(int), path[:,1].astype(int)] = True
+    distance_field = distance_transform_edt(~road_mask)
 
-    path_row = np.convolve(path[:, 0], np.ones(window) / window, mode = "valid")
-    path_col = np.convolve(path[:, 1], np.ones(window) / window, mode = "valid")
-
-    path_row = np.clip(path_row, 0, rows - 1)
-    path_col = np.clip(path_col, 0, cols - 1)
-
-    path_array = np.stack([path_row, path_col], axis = 1)
-
-    r = np.arange(rows)
-    c = np.arange(cols)
-    grid_row, grid_col = np.meshgrid(r, c, indexing = "ij")
-
-    # === Smooth elevation along road ===
-    road_z_raw = hf[path_row.astype(int), path_col.astype(int)]
-
-    z_win = 20
-    kernel = np.ones(z_win) / z_win
-    road_z = np.convolve(road_z_raw, kernel, mode = "same")
-    road_z[:z_win] = road_z_raw[:z_win]
-    road_z[-z_win:] = road_z_raw[-z_win:]
-
-    # === Build full distance field ===
-    road_points = path_array[::5] 
-    road_heights = road_z[::5]
-
-    distance_field = np.full((rows, cols), np.inf)
-    height_field = np.zeros((rows, cols))
-
-    for (r, c), z in zip(road_points, road_heights):
-        dist = np.sqrt((grid_row - r)**2 + (grid_col - c)**2)
-
-        mask = dist < distance_field
-
-        height_field[mask] = z
-        distance_field[mask] = dist[mask]
-
-    # === Smooth blending ===
-    core = distance_field <= road_width_px
-    shoulder = (distance_field > road_width_px) & (
-        distance_field <= road_width_px + shoulder_width_px
-    )
+    height_map = griddata(path, road_z, (np.indices((rows, cols)).transpose(1, 2, 0)), method="nearest")
 
     new_hf = hf.copy()
-    new_hf[core] = height_field[core]
+    core = distance_field <= road_width_px
+    shoulder = (distance_field > road_width_px) & (distance_field <= road_width_px + shoulder_width_px)
+    
+    new_hf[core] = height_map[core]
+    
     t = (distance_field[shoulder] - road_width_px) / shoulder_width_px
     smooth = 3 * t**2 - 2 * t**3
-
-    new_hf[shoulder] = (
-        height_field[shoulder] * (1 - smooth) +
-        hf[shoulder] * smooth
-    )
+    new_hf[shoulder] = height_map[shoulder] * (1 - smooth) + hf[shoulder] * smooth
 
     return new_hf
 
@@ -279,17 +215,16 @@ def create_noise_hf(difficulty: float, cfg: NoiseHfCfg):
     offset = 10000.0 * np.random.rand()
 
     # == Raw noise ==
-    x = np.linspace(0.0, rows, rows)
-    y = np.linspace(0.0, cols, cols)
-    xv, yv = np.meshgrid(x, y, indexing = 'ij')
+    hf = np.zeros((rows, cols))
 
-    v_snoise2 = np.vectorize(lambda x, y: noise.snoise2(
-        (x + offset) / cfg.freq, 
-        (y + offset) / cfg.freq, 
-        octaves = cfg.octaves
-    ))
+    for i in range(rows):
+        for j in range(cols):
+            hf[i, j] = noise.snoise2(
+                (i + offset) / cfg.freq,
+                (j + offset) / cfg.freq,
+                octaves = cfg.octaves,
+            )
 
-    hf = v_snoise2(xv, yv)
     hf = (hf + 1.0) / 2.0 # Raw noise is [-1, 1]
 
     # == Scaling & clipping ==
@@ -306,7 +241,7 @@ def create_noise_hf(difficulty: float, cfg: NoiseHfCfg):
     hf = np.clip(hf, min_ht_adj, max_ht_adj)
 
     if cfg.generate_roads:
-        hf = add_roads_v2(hf, difficulty, cfg.horizontal_scale, cfg.vertical_scale)
+        hf = add_roads(hf, difficulty, cfg.horizontal_scale, cfg.road_num_nodes, cfg.road_width_range)
 
     return (hf - min_ht_adj).astype(np.float32)
 
@@ -466,22 +401,6 @@ def steep_penalty(env, thresh_pitch):
     steep_ramp = torch.clamp(pitch - thresh_pitch, min=0)
     return steep_ramp
 
-def elevation_continuity(env, threshold_elev):
-     pos = mdp.root_pos_w(env)    
-     z_value = pos[..., 2] - 0.19  # Base elevation adjustment
-     # print((z_value > 0.1).sum())
-     if not hasattr(elevation_continuity, "prev_elevation"):
-         elevation_continuity.prev_elevation = z_value.clone()
-     delta_z = z_value - elevation_continuity.prev_elevation
-     on_ramp = z_value > threshold_elev
-     ascending = delta_z > 0
-     descending = delta_z < 0
-     rew_ascend = torch.where(on_ramp & ascending, 50*delta_z, torch.zeros_like(z_value))
-     rew_descend = torch.where(on_ramp & descending, -50*delta_z, torch.zeros_like(z_value))  # Note: -delta_z makes it positive
-     rew = rew_ascend + rew_descend
-     elevation_continuity.prev_elevation = z_value.clone()
-     return rew
-
 def yaw_change_onElev(env, threshold_yaw, threshold_z):
     pos = mdp.root_pos_w(env)    
     z_value = pos[..., 2] - 0.19
@@ -504,12 +423,6 @@ def roll_on_elev(env, z_start, roll_rate_thresh):
     condition = (z_value > z_start) & (abs(ang_vel_roll)>roll_rate_thresh) 
     rew = torch.where(condition, abs(ang_vel_roll)*2.0, torch.zeros_like(ang_vel_roll))
     return rew
-
-def is_falling_penalty(env, map_length_px=26, sensor_cfg=SceneEntityCfg("height_scanner")):
-    pos = mdp.root_pos_w(env)
-    vel = mdp.base_lin_vel(env)
-
-    return torch.where(vel[:, 2] > 1.0, 1.0, 0.0)
 
 def goal_progress_rate(env):
     pos = mdp.root_pos_w(env)
