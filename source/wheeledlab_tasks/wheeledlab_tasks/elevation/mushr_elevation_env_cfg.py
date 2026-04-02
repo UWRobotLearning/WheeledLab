@@ -480,7 +480,7 @@ class ElevationRewardsCfg:
     stuck_penalty = RewTerm(
         func = mdp.rewards.is_terminated_term,
         params={"term_keys": ["stuck"]},
-        weight = -1000.0
+        weight = -100.0
     )
 
     rollover_penalty = RewTerm(
