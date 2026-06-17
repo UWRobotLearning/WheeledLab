@@ -9,6 +9,10 @@
 #                                          leave "" to show the person's initial)
 #    bio    : "A few sentences..."        (keep the quotes; "" = "Bio coming soon")
 #    tags   : [Topic One, Topic Two]      ([] for none)
+#    task   : Drifting                    (Sim2Real task they work on: Drifting,
+#                                          Visual, Elevation, or anything else;
+#                                          comma-separate several, e.g.
+#                                          "Elevation, Visual")
 #
 #  TEAM card (several people together): make photo a list, e.g.
 #    photo: [alice.jpg, bob.jpg]
@@ -24,43 +28,49 @@
   tags: []
 
 - name: Laura Wang
-  role: Student
   photo: laura_wang.png
   bio: "Laura is an undergraduate computer science student at the University of
     Washington working with Tyler Han. She is broadly interested in robust robot
     autonomy and reinforcement learning. In her free time, she enjoys birdwatching,
     playing volleyball, and practicing bass and piano."
   tags: [Robust Autonomy, Reinforcement Learning]
+  task: Elevation, Visual
+
+- name: Vineeth Reddy
+  photo: vineeth-reddy.jpg
+  bio: "Hi, I'm Vineeth! I'm a Computer Engineering student at the University of Washington, broadly interested in robotics and machine learning. At RLL, I'm working under Tyler Han on Wheeled Lab, exploring reinforcement learning and its applications in robotics. Outside of the lab, you can find me playing volleyball, singing jazz, or trying some new food!"
+  tags: [Reinforcement Learning]
+  task: Onboarding
 
 - name: Aarul Motiani
-  role: Student
   photo: aarul_motiani.jpg
   bio: ""
   tags: []
+  task: Visual
 
 - name: Anirudh Rao
-  role: Student
   photo: anirudh_rao.png
   bio: ""
   tags: []
+  task: Real2Sim
 
 - name: Jayson Xu
-  role: Student
   photo: jayson_xu.png
   bio: "Jayson is a rising senior at UW, currently interning at Roboforce, a robotics
     company in the Bay Area, while working on a drifting policy project in the Lab —
     with plans to explore LLM-assisted reward optimization via Dr. Eureka next.
     Outside of research and work, you'll find him at the gym."
   tags: [Reinforcement Learning, Drifting, LLM Reward Design]
+  task: Drifting
 
 - name: Caleb Hsu
-  role: Student
   photo: caleb-hsu.jpg
   bio: "Within Wheeled Lab, Caleb is building an end-to-end racing task that pushes
     the hardware limits of the RC cars to their extreme. In his free time he likes to
     hike, climb, and binge-watch shows about magic and fantasy — while commenting on
     how unrealistically the characters behave."
   tags: [End-to-End Learning, Racing, Sim2Real]
+  task: Visual
 
 - name: Tyler Han
   role: Advisor

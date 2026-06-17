@@ -37,6 +37,17 @@
     }).join('&nbsp;&nbsp;') + '</p>';
   }
 
+  // Task tag(s): which Sim2Real task(s) the person works on. `task` may be a
+  // YAML list or a comma-separated string (e.g. "Elevation, Visual").
+  function taskTags(task) {
+    var arr = Array.isArray(task) ? task : (task ? String(task).split(',') : []);
+    arr = arr.map(function (s) { return String(s).trim(); }).filter(Boolean);
+    if (!arr.length) return '';
+    return '<div class="tags mb-2">' + arr.map(function (t) {
+      return '<span class="tag task-tag">' + esc(t) + '</span>';
+    }).join('') + '</div>';
+  }
+
   function card(member) {
     var role = member.role
       ? '<p class="has-text-grey is-size-6 mb-2">' + esc(member.role) + '</p>' : '';
@@ -47,7 +58,7 @@
       '<figure class="media-left">' + avatar(member) + '</figure>' +
       '<div class="media-content">' +
         '<p class="title is-5 mb-1">' + esc(member.name) + '</p>' +
-        role + bio + tags(member.tags) + links(member.links) +
+        role + taskTags(member.task) + bio + tags(member.tags) + links(member.links) +
       '</div></article></div>';
   }
 
