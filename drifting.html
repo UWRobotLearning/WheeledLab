@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Wheeled Lab — Drifting tutorial">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wheeled Lab — Drifting</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="stylesheet" href="./static/css/docs.css?v=3">
+  <link rel="stylesheet" href="./static/vendor/highlight/github.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script defer src="./static/js/docs.js?v=3"></script>
+  <meta property="og:site_name" content="Wheeled Lab" />
+  <meta property="og:title" content="Wheeled Lab — Drifting" />
+</head>
+
+<body>
+
+<!-- Top navbar -->
+<nav class="navbar is-dark" role="navigation" aria-label="main navigation" style="position: sticky; top: 0; z-index: 1000;">
+  <div class="container is-max-fullhd">
+    <div class="navbar-brand">
+      <a class="navbar-item" id="docs-sidebar-toggle" role="button" aria-label="Toggle contents sidebar" title="Toggle contents">
+        <span class="icon"><i class="fas fa-bars"></i></span>
+      </a>
+      <a class="navbar-item has-text-weight-bold is-size-5" href="./index.html">Wheeled Lab</a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="./index.html">Home</a>
+        <a class="navbar-item" href="./overview.html">Introduction</a>
+        <a class="navbar-item" href="./setup.html">Setup</a>
+        <a class="navbar-item is-active" href="./drifting.html">Drifting</a>
+      </div>
+      <div class="navbar-end">
+        <a class="navbar-item" id="distraction-toggle" role="button" title="Hide videos and images">
+          <span class="icon"><i class="fas fa-eye-slash"></i></span>
+          <span class="control-label">No Distractions</span>
+        </a>
+        <div class="navbar-item" title="Text size">
+          <span class="icon"><i class="fas fa-font"></i></span>
+          <input type="range" id="font-size-slider" min="80" max="150" step="5" value="100" aria-label="Text size" style="width: 90px; margin-left: 6px;">
+        </div>
+        <a class="navbar-item" href="https://uwrobotlearning.github.io/WheeledLab/">Docs</a>
+        <span class="navbar-item">
+          <a href="https://github.com/UWRobotLearning/WheeledLab" class="button is-inverted is-small">
+            <span class="icon"><i class="fab fa-github"></i></span>
+            <span>Code</span>
+          </a>
+        </span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="docs-layout">
+
+  <!-- Syllabus sidebar -->
+  <aside id="docs-sidebar" class="docs-sidebar-col">
+    <nav class="menu docs-sidebar">
+      <a class="docs-sidebar-brand" href="./index.html">
+        <span class="icon has-text-primary"><i class="fas fa-graduation-cap"></i></span>
+        <span>Wheeled Lab Course</span>
+      </a>
+
+      <p class="menu-label">Overview</p>
+      <ul class="menu-list">
+        <li><a href="./index.html">Home</a></li>
+        <li><a href="./overview.html">Introduction</a></li>
+      </ul>
+
+      <p class="menu-label">Getting Started</p>
+      <ul class="menu-list">
+        <li><a href="./setup.html">Installation, Setup &amp; Codebase</a></li>
+      </ul>
+
+      <p class="menu-label">Sim2Real Tasks</p>
+      <ul class="menu-list">
+        <li>
+          <a href="./drifting.html" class="is-active">Drifting</a>
+          <ul>
+            <li><a href="#introduction">Introduction</a></li>
+            <li><a href="#environment">Environment</a></li>
+            <li><a href="#observations">Observations</a></li>
+            <li><a href="#actions">Actions</a></li>
+            <li><a href="#rewards">Rewards</a></li>
+            <li><a href="#training">Training</a></li>
+            <li><a href="#references">References</a></li>
+          </ul>
+        </li>
+        <li><a class="is-disabled">Elevation <span class="tag is-light is-rounded ml-2">soon</span></a></li>
+        <li><a class="is-disabled">Visual <span class="tag is-light is-rounded ml-2">soon</span></a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main content -->
+  <main class="docs-content">
+
+    <nav class="breadcrumb is-small" aria-label="breadcrumbs">
+      <ul>
+        <li><a href="./overview.html">Introduction</a></li>
+        <li><a href="./setup.html">Setup</a></li>
+        <li class="is-active"><a href="#" aria-current="page">Drifting</a></li>
+      </ul>
+    </nav>
+    <h1 class="title is-1">Drifting</h1>
+
+    <!-- Introduction -->
+    <div class="content is-size-5">
+      <h2 class="title is-3 mt-5" id="introduction">Introduction</h2>
+
+      <div class="columns">
+        <div class="column">
+          <figure class="has-text-centered">
+            <video controls autoplay loop muted playsinline
+              src="./resources/drift/drift_policy.mp4"
+              poster="./resources/loading-icon.gif"
+              style="width: 100%; border: 1px solid #bbb; border-radius: 10px;"></video>
+          </figure>
+        </div>
+        <div class="column">
+          <figure class="has-text-centered">
+            <img src="./resources/tutorial/drift-intro.gif" alt="Rally car drifting"
+              style="width: 100%; border: 1px solid #bbb; border-radius: 10px;">
+          </figure>
+        </div>
+      </div>
+
+      <details class="box" style="background-color: #f8f9fa;">
+        <summary class="has-text-weight-semibold" style="cursor: pointer;">
+          Preface: My (Tyler) Background and Motivation
+        </summary>
+        <div class="mt-3">
+          <p>
+            I began working on drifting as a way to start breaking into Reinforcement
+            Learning. My background prior was mostly in Dynamics &amp; Control. Throughout
+            this project, I didn't even know how PPO worked!
+          </p>
+          <p>
+            As robot learning invites more communities from computer vision, data science,
+            machine learning, and language, I want to stress that engineering physics is an
+            inescapable aspect of robotics.
+          </p>
+          <p>
+            For this reason, I hope the drifting task helps to introduce beginning roboticists
+            to the challenges and delights of problems deeply rooted in Dynamics &amp; Control.
+          </p>
+          <p class="mb-0">
+            Welcome to the world of <strong>always-out-of-distribution</strong>!
+          </p>
+        </div>
+      </details>
+
+      <p>
+        Drifting has been a difficult problem in both optimal control and reinforcement
+        learning. While there are many reasons why, one of the main issues is this:
+      </p>
+
+      <figure class="has-text-centered my-4">
+        <img src="./resources/tutorial/drift-vs-turn.gif" alt="Turn right to go left"
+          style="max-width: 100%; border: 1px solid #bbb; border-radius: 10px;">
+        <figcaption class="mt-2">Turn right to go left</figcaption>
+      </figure>
+
+      <div class="notification is-info is-light">
+        💡 The drifting maneuver is <strong>entirely opposite</strong> to standard turning.
+      </div>
+
+      <p>
+        In addition, the maneuver is <em>unstable</em>. In a physical system, we call a state
+        "unstable" if the world naturally wants to move away from it. For example, standing
+        on one leg or balancing a pencil on its tip. Without precisely controlling a drift,
+        the car will very easily spin out or come to a stop.
+      </p>
+      <p>
+        However, instability is extremely natural for animals. In fact, we often use it to our
+        advantage (like running and jumping). For a long time, robots were always built to be
+        100% stable all of the time. That's why they used to look like this:
+      </p>
+
+      <figure class="has-text-centered my-4">
+        <img src="./resources/tutorial/old-stable-robot.gif" alt="A statically stable humanoid robot"
+          style="max-width: 100%; border: 1px solid #bbb; border-radius: 10px;">
+        <figcaption class="mt-2">Looks like it just pooped itself</figcaption>
+      </figure>
+
+      <p>
+        <strong>Controlled Instability</strong> is currently one of the many things that
+        separates animals apart from robots for physical tasks. As it turns out, drifting
+        happens to be a perfect task to get some hands-on experience for this without breaking
+        the bank. Because, to execute a drift, the robot must first destabilize itself then
+        quickly regain control after the turn. But, one wrong move and it will easily spin out.
+      </p>
+      <p class="has-text-weight-semibold">So, how do we teach the robot to drift?</p>
+    </div>
+
+    <!-- Environment -->
+    <div class="content is-size-5">
+      <h2 class="title is-3 mt-6" id="environment">Environment</h2>
+      <p>
+        Assuming you've read about <code>configclass</code> and our config structure in
+        <a href="./setup.html">Installation, Setup &amp; Codebase</a>, we'll be referencing the
+        <code>MushrDriftRLEnvCfg</code> here. You can take a quick scan yourself first, or just
+        follow along:
+      </p>
+      <div class="box">
+        <span class="icon-text">
+          <span class="icon"><i class="fab fa-github"></i></span>
+          <span>
+            <a href="https://github.com/UWRobotLearning/WheeledLab/tree/main/source/wheeledlab_tasks/wheeledlab_tasks/drifting">
+              WheeledLab/source/wheeledlab_tasks/wheeledlab_tasks/drifting</a>
+          </span>
+        </span>
+      </div>
+
+      <div class="notification is-warning is-light">
+        💡 Before you read about the configs below: as a challenge, think about what they might
+        contain and how you might implement them yourself. You will likely have to change the
+        settings to fit your pipeline.
+      </div>
+    </div>
+
+    <!-- Observations -->
+    <div class="content is-size-5">
+      <h3 class="title is-4 mt-5" id="observations">Observations (Policy Input)</h3>
+      <pre><code class="language-python">@configclass
+class PolicyCfg(ObsGroup):
+    """Observations for policy group."""
+    root_pos_w_term = ObsTerm(  # meters
+        func=mdp.root_pos_w, noise=Gnoise(mean=0., std=0.1),
+    )
+    root_euler_xyz_term = ObsTerm(  # radians
+        func=root_euler_xyz, noise=Gnoise(mean=0., std=0.1),
+    )
+    base_lin_vel_term = ObsTerm(  # m/s
+        func=mdp.base_lin_vel, noise=Gnoise(mean=0., std=0.5),
+    )
+    base_ang_vel_term = ObsTerm(  # rad/s
+        func=mdp.base_ang_vel, noise=Gnoise(std=0.4),
+    )
+    last_action_term = ObsTerm(  # [m/s, (-1, 1)]
+        func=mdp.last_action, clip=(-1., 1.),
+    )  # TODO: get from ClipAction wrapper or action space
+
+    def __post_init__(self):
+        self.concatenate_terms = True
+        self.enable_corruption = False</code></pre>
+
+      <h4 class="title is-5">Terms</h4>
+      <p>Toggle the term for an explanation.</p>
+
+      <details class="box">
+        <summary><code>root_pos_w_term</code>: position of the robot relative to the world frame.</summary>
+        <p class="mt-2 mb-0">
+          Robot needs to know how far off track it is. This could also have been position
+          relative to track!
+        </p>
+      </details>
+      <details class="box">
+        <summary><code>root_euler_xyz_term</code>: (euler) rotation angles in x-y-z sequence. A.k.a. roll-pitch-yaw.</summary>
+        <p class="mt-2 mb-0">
+          Need to know how much to rotate to make the turn. Roll-and-pitch are probably not
+          necessary, though.
+        </p>
+      </details>
+      <details class="box">
+        <summary><code>base_lin_vel_term</code>: linear velocity in robot frame.</summary>
+        <p class="mt-2 mb-0">How fast is too fast?</p>
+      </details>
+      <details class="box">
+        <summary><code>base_ang_vel_term</code>: angular velocity in robot frame.</summary>
+        <p class="mt-2 mb-0">Am I turning too fast? Will I slip out?</p>
+      </details>
+      <details class="box">
+        <summary><code>last_action_term</code>: previously executed action.</summary>
+        <p class="mt-2">
+          Probably not necessary. In fact, it might be hurting the performance through
+          overfitting. I kinda forgot this was in here, to be honest.
+        </p>
+        <p class="mb-0">
+          I think this term is more important in complex tasks where you want to prevent the
+          robot from repeatedly trying things that don't work.
+        </p>
+      </details>
+    </div>
+
+    <!-- Actions -->
+    <div class="content is-size-5">
+      <h3 class="title is-4 mt-5" id="actions">Actions (Policy Output)</h3>
+      <p>
+        Our action space is <code>target_velocity</code> and <code>target_steering_angle</code>.
+        Notice that they're <em>targets</em>! We can't actually control these things exactly,
+        because the only things we actually have control over is the voltages of the steering
+        servo and drive motor.
+      </p>
+      <p>
+        A lower-level controller has to try and track your speeds through high-frequency
+        feedback control.
+      </p>
+      <p>
+        Our car controller also had to take specifically <em>steering</em> targets which are a
+        couple lines of math away from servo angle. We also locked our differential for the
+        drifting task. So no extra computation is necessary beyond this. Though, this is not
+        true for the 4-wheel-drive tasks (elevation, visual)!
+      </p>
+      <pre><code class="language-python">class RCCarRWDAction(ackermann_actions.AckermannAction):
+    """ MuSHR only uses tan steering and open diff throttle for drifting
+    TODO: simulated open diff throttle """
+    def _calculate_ackermann_angles_and_velocities(self, target_velocity, target_steering_angle):
+        """ Calculates the steering angles for the left and right front wheels and the
+        wheel velocities based on the Ackermann steering geometry. """
+        tan_steering = torch.tan(target_steering_angle)
+        target_ang_vel = target_velocity / self.wheel_rad  # tan steering and fixed rear throttle
+        delta_left = tan_steering
+        delta_right = tan_steering
+        v_back_left = target_ang_vel
+        v_back_right = target_ang_vel
+        throttle = torch.stack([v_back_left, v_back_right], dim=1)
+        return delta_left, delta_right, throttle</code></pre>
+
+      <pre><code class="language-python">@configclass
+class MushrRWDActionCfg:
+    throttle_steer = RCCarRWDActionCfg(
+        wheel_joint_names=[
+            "back_left_wheel_throttle", "back_right_wheel_throttle",
+        ],
+        steering_joint_names=[
+            "front_left_wheel_steer", "front_right_wheel_steer",
+        ],
+        base_length=0.325, base_width=0.2,
+        wheel_radius=0.05, scale=(3.0, 0.488), no_reverse=True,
+        bounding_strategy="clip", asset_name="robot",
+    )</code></pre>
+      <p>
+        Notice that we only provide <code>back_left_wheel_throttle</code> and
+        <code>back_right_wheel_throttle</code> to the <code>wheel_joint_names</code> which
+        indicate the driven wheels. On the other hand, the 4-wheel-drive will provide all four
+        wheels as driven wheels.
+      </p>
+    </div>
+
+    <!-- Rewards -->
+    <div class="content is-size-5">
+      <h3 class="title is-4 mt-5" id="rewards">Rewards</h3>
+      <p>
+        The bread and butter of RL. You'll find yourself changing rewards a bunch and should
+        get cozy with these. We organize our rewards into two categories: <strong>Task</strong>
+        and <strong>Shaping</strong> rewards.
+      </p>
+
+      <h4 class="title is-5">Task Rewards</h4>
+      <pre><code class="language-python">def vel_dist(env, speed_target: float=MAX_SPEED, offset: float=-MAX_SPEED**2):
+    lin_vel = mdp.base_lin_vel(env)
+    ground_speed = torch.norm(lin_vel[..., :2], dim=-1)
+    speed_dist = (ground_speed - speed_target) ** 2 + offset
+    return speed_dist  # speed target</code></pre>
+      <p>Simple — keep your speed up!</p>
+
+      <pre><code class="language-python">def cross_track_dist(env, straight: float,
+                     track_radius: float=(CORNER_IN_RADIUS + CORNER_OUT_RADIUS) / 2,
+                     offset: float=-1., p: float=1.0):
+    """Measures distance from a given radius on the track.
+    Defaults to the middle of the track."""
+    poses = mdp.root_pos_w(env)
+    on_straights = torch.abs(poses[..., 1]) &lt; straight
+    sq_ctd = torch.where(on_straights,
+        torch.where(poses[..., 0] &gt; 0,                          # Straights
+            (poses[..., 0] - track_radius)**2,                  # Quadrant 1
+            (poses[..., 0] + track_radius)**2),                 # Quadrant 2
+        torch.where(poses[..., 1] &gt; 0,                          # Corners
+            (torch.sqrt((poses[..., 1] - straight)**2 + poses[..., 0]**2) - track_radius)**2,  # Positive y Turn
+            (torch.sqrt((poses[..., 1] + straight)**2 + poses[..., 0]**2) - track_radius)**2,  # Negative y Turn
+        )
+    )
+    ctd = torch.sqrt(sq_ctd) + offset
+    return torch.pow(ctd, p)</code></pre>
+      <p>
+        Lots of lines here — but we're basically cutting up the xy-plane into two areas:
+        straights and turns. This lets us easily change the size of the oval track through two
+        parameters: <code>straight</code> (the length of the straight) and
+        <code>track_radius</code> (how large the turns are). Then, we reward how close the
+        robot is to this oval "racing-line".
+      </p>
+      <p>
+        I want to point out that a lot of prior RL methods to drifting include notions of
+        <em>time</em> in their racing line. Notice, we don't do that. This is much harder! The
+        robot has to <em>figure out when</em> to leave the line in order for it to execute the
+        drift.
+      </p>
+
+      <pre><code class="language-python">def side_slip(env, min_thresh: float, max_thresh: float, min_vel_x: float=0.5):
+    vel = mdp.base_lin_vel(env)
+    slip_angle = torch.abs(torch.atan2(vel[..., 1], vel[..., 0]))
+    valid_angle = torch.where(torch.logical_or(
+        torch.abs(vel[..., 0]) &lt; min_vel_x, slip_angle &gt; max_thresh), 0.0, slip_angle
+    )  # Discount lateral vel from steering
+    valid_angle = torch.where(valid_angle &lt; min_thresh, 0.0, valid_angle)
+    # Clamp unstable angles. Harder than zeroing for heavy, unstable vehicles
+    # valid_angle = torch.clamp(valid_angle, max=max_thresh)
+    return valid_angle</code></pre>
+      <p>
+        Here's our first bit of physics! The side-slip angle is the angle between the heading
+        of the robot and its global velocity. In theory, a large side-slip angle means the
+        vehicle is drifting. BUT, it can also mean the vehicle is just spinning out of control.
+        We enforce thresholds to make sure that the robot only gets rewarded for "stable"
+        slip-angles. These are generally angles within its steering capacity so that it can
+        always regain control if needed.
+      </p>
+      <div class="notification is-light">
+        <span class="icon-text">
+          <span class="icon"><i class="fas fa-up-right-from-square"></i></span>
+          <span>Background on the side-slip angle:
+            <a href="https://stevengong.co/notes/Sideslip-Angle">stevengong.co/notes/Sideslip-Angle</a>
+          </span>
+        </span>
+      </div>
+      <p>
+        We'll see that this reward is quite finicky and we'll have to shape it a bit in order
+        to get the behavior we desire.
+      </p>
+
+      <pre><code class="language-python">def off_track(env, straight, corner_out_radius):
+    poses = mdp.root_pos_w(env)
+    penalty = torch.where(torch.abs(poses[..., 1]) &lt; straight,
+        torch.where(torch.abs(poses[..., 0]) &gt; corner_out_radius, 1, 0),
+        torch.where(poses[..., 1] &gt; 0,
+            torch.where((poses[..., 1] - straight)**2 + poses[..., 0]**2 &gt; corner_out_radius**2, 1, 0),
+            torch.where((poses[..., 1] + straight)**2 + poses[..., 0]**2 &gt; corner_out_radius**2, 1, 0)))
+    return penalty</code></pre>
+      <p>Don't leave the track.</p>
+
+      <h4 class="title is-5">Shaping Rewards</h4>
+      <p>
+        Your <strong>Task</strong> rewards should be the minimum description of what you want
+        the robot to do. They are often <strong>sparse</strong> and don't enforce much
+        structure. Ideally, RL algorithms are able to solve the task with just these rewards
+        through clever exploration-exploitation. However, if the task is difficult, the robot
+        will need some extra help getting there. <strong>Shaping</strong> terms usually provide
+        <strong>denser</strong> signals that help guide the optimization process towards the
+        desired behavior. But, you have to be careful with over-prescribing rewards as they
+        very often mislead the agent. Reward engineering is easily more art than science. So,
+        as you try and build intuition, remember that there's no right answer!
+      </p>
+
+      <pre><code class="language-python">def track_progress_rate(env):
+    '''Estimate track progress by positive z-axis angular velocity around the environment'''
+    asset: RigidObject = env.scene[SceneEntityCfg("robot").name]
+    root_ang_vel = asset.data.root_link_ang_vel_w  # this is different than the mdp one
+    progress_rate = root_ang_vel[..., 2]
+    return progress_rate</code></pre>
+      <p>
+        I found that the robot eventually starts executing the "Scandinavian flick" to just
+        completely turn around and then drive the other way. In my personal experience with the
+        RC car, it does seem to be more dynamically stable than a turn with some radius. This
+        reward makes sure that the robot keeps driving clockwise around the track.
+      </p>
+
+      <pre><code class="language-python">def energy_through_turn(env, straight: float):
+    poses = mdp.root_pos_w(env)
+    speed = torch.norm(mdp.base_lin_vel(env), dim=-1)
+    energy_through_turn = torch.where(torch.abs(poses[..., 1]) &gt; straight, speed**2, 0.)
+    return energy_through_turn</code></pre>
+      <p>
+        This encourages the robot to speed up through turns to prevent it from just turning
+        normally.
+      </p>
+
+      <div class="notification is-warning is-light">
+        <span class="icon-text">
+          <span class="icon"><i class="fas fa-pen-ruler"></i></span>
+          <span>
+            <strong>More coming:</strong> the <em>Events</em>, <em>Terminations</em>, and
+            <em>Curriculum</em> sections of this tutorial are still being written. Check back
+            for updates!
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Training -->
+    <div class="content is-size-5">
+      <h2 class="title is-3 mt-6" id="training">Training</h2>
+      <p>Launch drift training with the bundled config:</p>
+      <pre><code class="language-bash">python scripts/train_rl.py --headless -r RSS_DRIFT_CONFIG</code></pre>
+      <p>
+        See <a href="./setup.html#hydra">Setup</a> for how Hydra lets you override any reward
+        weight or parameter from the command line — e.g. tuning the
+        <code>side_slip</code> weight while you build intuition.
+      </p>
+    </div>
+
+    <!-- References -->
+    <div class="content is-size-5">
+      <h2 class="title is-3 mt-6" id="references">References</h2>
+      <ul>
+        <li>
+          <a href="https://arxiv.org/abs/2502.07380">Demonstrating Wheeled Lab: Modern Sim2Real
+          for Low-cost, Open-source Wheeled Robotics</a> (arXiv:2502.07380)
+        </li>
+        <li>
+          <a href="https://github.com/UWRobotLearning/WheeledLab">Wheeled Lab codebase</a> on GitHub
+        </li>
+        <li>
+          Steven Gong — <a href="https://stevengong.co/notes/Sideslip-Angle">Sideslip Angle</a> notes
+        </li>
+      </ul>
+    </div>
+
+    <!-- Prev/Next -->
+    <div class="level mt-6">
+      <div class="level-left">
+        <a class="button is-light" href="./setup.html">
+          <span class="icon"><i class="fas fa-arrow-left"></i></span>
+          <span>Setup</span>
+        </a>
+      </div>
+      <div class="level-right">
+        <a class="button is-light" href="./overview.html">
+          <span>Back to Introduction</span>
+          <span class="icon"><i class="fas fa-arrow-right"></i></span>
+        </a>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="footer" style="padding: 2rem 1.5rem;">
+  <div class="container">
+    <div class="content has-text-centered is-size-7 has-text-grey">
+      <p class="mb-0">
+        <strong>Wheeled Lab</strong> &middot; University of Washington &middot;
+        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script src="./static/vendor/highlight/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+<style>
+  pre { border-radius: 8px; }
+  pre code.hljs { background: transparent; padding: 0; }
+  details > summary { list-style: revert; cursor: pointer; }
+  details.box { padding: 0.9rem 1.1rem; margin-bottom: 0.6rem; }
+</style>
+</body>
+</html>

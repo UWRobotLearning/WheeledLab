@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Wheeled Lab — Introduction">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wheeled Lab — Introduction</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="stylesheet" href="./static/css/docs.css?v=3">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script defer src="./static/js/docs.js?v=3"></script>
+  <meta property="og:site_name" content="Wheeled Lab" />
+  <meta property="og:title" content="Wheeled Lab — Introduction" />
+</head>
+
+<body>
+
+<!-- Top navbar -->
+<nav class="navbar is-dark" role="navigation" aria-label="main navigation" style="position: sticky; top: 0; z-index: 1000;">
+  <div class="container is-max-fullhd">
+    <div class="navbar-brand">
+      <a class="navbar-item" id="docs-sidebar-toggle" role="button" aria-label="Toggle contents sidebar" title="Toggle contents">
+        <span class="icon"><i class="fas fa-bars"></i></span>
+      </a>
+      <a class="navbar-item has-text-weight-bold is-size-5" href="./index.html">Wheeled Lab</a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="./index.html">Home</a>
+        <a class="navbar-item is-active" href="./overview.html">Introduction</a>
+        <a class="navbar-item" href="./setup.html">Setup</a>
+        <a class="navbar-item" href="./drifting.html">Drifting</a>
+      </div>
+      <div class="navbar-end">
+        <a class="navbar-item" id="distraction-toggle" role="button" title="Hide videos and images">
+          <span class="icon"><i class="fas fa-eye-slash"></i></span>
+          <span class="control-label">No Distractions</span>
+        </a>
+        <div class="navbar-item" title="Text size">
+          <span class="icon"><i class="fas fa-font"></i></span>
+          <input type="range" id="font-size-slider" min="80" max="150" step="5" value="100" aria-label="Text size" style="width: 90px; margin-left: 6px;">
+        </div>
+        <a class="navbar-item" href="https://arxiv.org/abs/2502.07380">arXiv</a>
+        <a class="navbar-item" href="https://uwrobotlearning.github.io/WheeledLab/">Docs</a>
+        <span class="navbar-item">
+          <a href="https://github.com/UWRobotLearning/WheeledLab" class="button is-inverted is-small">
+            <span class="icon"><i class="fab fa-github"></i></span>
+            <span>Code</span>
+          </a>
+        </span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="docs-layout">
+
+  <!-- Syllabus sidebar -->
+  <aside id="docs-sidebar" class="docs-sidebar-col">
+    <nav class="menu docs-sidebar">
+      <a class="docs-sidebar-brand" href="./index.html">
+        <span class="icon has-text-primary"><i class="fas fa-graduation-cap"></i></span>
+        <span>Wheeled Lab Course</span>
+      </a>
+
+      <p class="menu-label">Overview</p>
+      <ul class="menu-list">
+        <li><a href="./index.html">Home</a></li>
+        <li>
+          <a href="./overview.html" class="is-active">Introduction</a>
+          <ul>
+            <li><a href="#tasks">The Three Tasks</a></li>
+            <li><a href="#next-steps">Next Steps</a></li>
+          </ul>
+        </li>
+      </ul>
+
+      <p class="menu-label">Getting Started</p>
+      <ul class="menu-list">
+        <li><a href="./setup.html">Installation, Setup &amp; Codebase</a></li>
+      </ul>
+
+      <p class="menu-label">Sim2Real Tasks</p>
+      <ul class="menu-list">
+        <li><a href="./drifting.html">Drifting</a></li>
+        <li><a class="is-disabled">Elevation <span class="tag is-light is-rounded ml-2">soon</span></a></li>
+        <li><a class="is-disabled">Visual <span class="tag is-light is-rounded ml-2">soon</span></a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main content -->
+  <main class="docs-content">
+
+    <h1 class="title is-1">Introduction</h1>
+    <p class="subtitle is-4 mt-2">
+      A full-stack integration of Isaac Lab with entry-level wheeled robots.
+    </p>
+
+    <div class="content is-size-5">
+      <p>
+        <strong>Wheeled Lab</strong> is a full-stack integration of
+        <a href="https://isaac-sim.github.io/IsaacLab/">Isaac Lab</a> with entry-level
+        wheeled robots. There are currently three fully integrated tasks:
+      </p>
+    </div>
+
+    <!-- The Three Tasks -->
+    <h2 class="title is-3 mt-5" id="tasks">The Three Tasks</h2>
+
+    <!-- Task: Drifting -->
+    <div class="columns is-vcentered mt-2">
+      <div class="column is-half">
+        <div class="content is-size-5">
+          <h3 class="title is-4">
+            <span class="icon-text">
+              <span class="icon has-text-primary"><i class="fas fa-car-side"></i></span>
+              <span>Drifting</span>
+            </span>
+          </h3>
+          <p>
+            Drifting is a challenging task in both optimal control and reinforcement
+            learning. It's a physically unstable maneuver precisely determined by things
+            like vehicle mass, friction, motor torque, mechanics, etc. But, what do you do
+            if you don't know these things? <strong>Simulate and train!</strong>
+          </p>
+          <a class="button is-small is-primary is-light" href="./drifting.html">
+            <span>Open the Drifting tutorial</span>
+            <span class="icon"><i class="fas fa-arrow-right"></i></span>
+          </a>
+        </div>
+      </div>
+      <div class="column is-half">
+        <figure class="has-text-centered">
+          <video controls autoplay loop muted playsinline
+            src="./resources/drift/drift_policy.mp4"
+            poster="./resources/loading-icon.gif"
+            style="width: 100%; border: 1px solid #bbb; border-radius: 10px;"></video>
+          <figcaption class="mt-2">
+            Vehicle executes a "Scandinavian flick" to drift, which emerged from training!
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <!-- Task: Elevation -->
+    <div class="columns is-vcentered">
+      <div class="column is-half">
+        <figure class="has-text-centered">
+          <video controls autoplay loop muted playsinline
+            src="./resources/elevation/mvi_1176_policy.mp4"
+            poster="./resources/loading-icon.gif"
+            style="width: 100%; border: 1px solid #bbb; border-radius: 10px;"></video>
+          <figcaption class="mt-2">
+            Vehicle knows what geometries are walls and what are ramps through
+            trial-and-error in training.
+          </figcaption>
+        </figure>
+      </div>
+      <div class="column is-half">
+        <div class="content is-size-5">
+          <h3 class="title is-4">
+            <span class="icon-text">
+              <span class="icon has-text-primary"><i class="fas fa-mountain"></i></span>
+              <span>Elevation</span>
+            </span>
+          </h3>
+          <p>
+            Elevation intimately connects perception and control. What's the difference
+            between an obstacle and a ramp? Stairs? For a robot, the answer depends on what
+            kind of thing it is: quadruped, car, drone, etc.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task: Visual -->
+    <div class="columns is-vcentered">
+      <div class="column is-half">
+        <div class="content is-size-5">
+          <h3 class="title is-4">
+            <span class="icon-text">
+              <span class="icon has-text-primary"><i class="fas fa-camera"></i></span>
+              <span>Visual</span>
+            </span>
+          </h3>
+          <p>
+            Visual is a modern simulation-based approach to the age-old problem of
+            navigation with cameras.
+          </p>
+        </div>
+      </div>
+      <div class="column is-half">
+        <figure class="has-text-centered">
+          <video controls autoplay loop muted playsinline
+            src="./resources/rgb/mlp_aug_barricade.mp4"
+            poster="./resources/loading-icon.gif"
+            style="width: 100%; border: 1px solid #bbb; border-radius: 10px;"></video>
+          <figcaption class="mt-2">
+            Cameras are high(huge)-dimensional states that have to be mapped down to actions.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <!-- Closing -->
+    <div class="box mt-5" style="border: 2px solid #6366f1;">
+      <div class="content is-size-5">
+        <p class="mb-0">
+          Wherever you start, you'll learn about state-of-the-art simulation and
+          reinforcement learning. And by deploying these models on hardware, you'll develop
+          valuable engineering skills: hyperparameter tuning, model evaluation &amp;
+          selection, and the killer: solving the <strong>Sim2Real gap!</strong>
+        </p>
+      </div>
+    </div>
+
+    <!-- Next Steps -->
+    <h2 class="title is-3 mt-6" id="next-steps">Next Steps</h2>
+    <div class="columns mt-2">
+      <div class="column">
+        <a href="./setup.html" class="box" style="display: block; height: 100%;">
+          <p class="is-size-7 has-text-grey has-text-weight-semibold mb-2">STEP 1</p>
+          <h3 class="title is-4">
+            <span class="icon-text">
+              <span class="icon has-text-primary"><i class="fas fa-screwdriver-wrench"></i></span>
+              <span>Installation, Setup &amp; Codebase</span>
+            </span>
+          </h3>
+          <p class="is-size-6">
+            Get the codebase running and learn the <code>configclass</code> building blocks,
+            inheritance &amp; overrides, and Hydra — used everywhere in Wheeled Lab.
+          </p>
+        </a>
+      </div>
+      <div class="column">
+        <a href="./drifting.html" class="box" style="display: block; height: 100%;">
+          <p class="is-size-7 has-text-grey has-text-weight-semibold mb-2">STEP 2</p>
+          <h3 class="title is-4">
+            <span class="icon-text">
+              <span class="icon has-text-primary"><i class="fas fa-car-side"></i></span>
+              <span>Drifting</span>
+            </span>
+          </h3>
+          <p class="is-size-6">
+            Walk through the first Sim2Real task end-to-end: why drifting is hard, and how the
+            drift environment is configured and trained.
+          </p>
+        </a>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="footer" style="padding: 2rem 1.5rem;">
+  <div class="container">
+    <div class="content has-text-centered is-size-7 has-text-grey">
+      <p class="mb-0">
+        <strong>Wheeled Lab</strong> &middot; University of Washington &middot;
+        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>
+      </p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

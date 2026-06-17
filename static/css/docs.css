@@ -1,0 +1,136 @@
+/* ---- Docs / syllabus layout ---------------------------------------- */
+
+:root {
+  --wl-primary: #6366f1;
+  --wl-navbar-h: 52px;
+  --wl-border: #ededed;
+}
+
+.docs-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.5rem;
+  max-width: 1344px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0;
+}
+
+/* Sidebar column */
+.docs-sidebar-col {
+  flex: 0 0 264px;
+  position: sticky;
+  top: calc(var(--wl-navbar-h) + 1rem);
+  align-self: flex-start;
+  max-height: calc(100vh - var(--wl-navbar-h) - 1.5rem);
+  overflow-y: auto;
+  padding: 0.5rem 1.25rem 1.5rem 0;
+  border-right: 1px solid var(--wl-border);
+}
+
+/* Main content column */
+.docs-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 860px;
+  padding-bottom: 2rem;
+}
+
+/* Sidebar menu styling */
+.docs-sidebar .menu-label {
+  letter-spacing: 0.04em;
+  color: #8a8a8a;
+  margin-top: 1.25rem;
+}
+.docs-sidebar .menu-label:first-child { margin-top: 0; }
+
+.docs-sidebar .menu-list a {
+  border-radius: 6px;
+  padding: 0.35em 0.6em;
+  color: #4a4a4a;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.docs-sidebar .menu-list a:hover {
+  background-color: #f1f1ff;
+  color: var(--wl-primary);
+}
+.docs-sidebar .menu-list a.is-active {
+  background-color: var(--wl-primary);
+  color: #fff;
+  font-weight: 600;
+}
+.docs-sidebar .menu-list ul {
+  margin-right: 0;
+  border-left: 1px solid var(--wl-border);
+  padding-left: 0.75em;
+}
+.docs-sidebar .menu-list ul a {
+  font-size: 0.92rem;
+  color: #6a6a6a;
+}
+/* sub-anchor that is the current scroll target */
+.docs-sidebar .menu-list ul a.is-current {
+  color: var(--wl-primary);
+  font-weight: 600;
+  background-color: #f1f1ff;
+}
+.docs-sidebar .menu-list a.is-disabled {
+  color: #b5b5b5;
+  pointer-events: none;
+}
+
+/* Sidebar brand on top */
+.docs-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 0.75rem;
+  color: #363636;
+}
+
+/* Sidebar collapse toggle — works on all viewports */
+#docs-sidebar-toggle { cursor: pointer; }
+
+/* Reading controls */
+#distraction-toggle { cursor: pointer; }
+.docs-layout.hide-media .docs-content figure { display: none; }
+#font-size-slider { accent-color: #fff; vertical-align: middle; cursor: pointer; }
+.docs-layout.sidebar-collapsed .docs-sidebar-col { display: none; }
+.docs-layout.sidebar-collapsed .docs-content {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media screen and (max-width: 1023px) {
+  .docs-layout {
+    display: block;
+    padding: 1rem;
+  }
+  .docs-sidebar-col {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--wl-border);
+    padding: 0 0 1rem 0;
+    margin-bottom: 1.25rem;
+  }
+}
+
+/* ---- Footer visitor map -------------------------------------------- */
+.visitor-map-wrap {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.visitor-map-wrap .menu-label {
+  justify-content: center;
+  display: block;
+  text-align: center;
+}
+#visitor-map { display: inline-block; width: 380px; max-width: 92%; text-align: left; }
+#visitor-map .leaflet-container { font: inherit; }
+
+/* Smooth in-page anchor scrolling, offset for sticky navbar */
+html { scroll-behavior: smooth; }
+.docs-content [id] { scroll-margin-top: calc(var(--wl-navbar-h) + 1rem); }

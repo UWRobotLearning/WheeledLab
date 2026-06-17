@@ -1,0 +1,21 @@
+# =============================================================================
+#  WL@UW SHOWCASE  —  EDIT THIS FILE (no HTML needed)
+# =============================================================================
+#
+#  Posters, demos, and project highlights. Each item starts with "- ":
+#    title   : "Project / poster title"
+#    authors : Name One, Name Two
+#    image   : depth-sim2real.png   (preview image in static/images/posters/)
+#    pdf     : depth-sim2real.pdf   (file in static/pdfs/, opens on click)
+#    url     : https://...          (use instead of pdf to link elsewhere)
+#    tags    : [Poster, Topic]
+#
+#  To add a PDF poster: drop the PDF in static/pdfs/, add a preview image in
+#  static/images/posters/ (or ask to have one generated), then add a block here.
+# =============================================================================
+
+- title: "Low-cost Terrain Navigation for Education in End-to-End Robotics"
+  authors: Laura Wang, Caleb Hsu, Byron Boots, Tyler Han
+  image: depth-sim2real.png
+  pdf: depth-sim2real.pdf
+  tags: [Poster, Depth Sim2Real, End-to-End]

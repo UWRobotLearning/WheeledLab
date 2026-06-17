@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="WL@UW — Wheeled Lab at the University of Washington">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WL@UW — Wheeled Lab at the University of Washington</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <meta property="og:site_name" content="Wheeled Lab" />
+  <meta property="og:title" content="WL@UW — Wheeled Lab at the University of Washington" />
+</head>
+
+<body>
+
+<!-- Top navbar -->
+<nav class="navbar is-dark" role="navigation" aria-label="main navigation" style="position: sticky; top: 0; z-index: 1000;">
+  <div class="container is-max-fullhd">
+    <div class="navbar-brand">
+      <a class="navbar-item has-text-weight-bold is-size-5" href="./index.html">Wheeled Lab</a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="./index.html">Home</a>
+        <a class="navbar-item" href="./overview.html">Learn</a>
+        <a class="navbar-item is-active" href="./wlatuw.html">WL@UW</a>
+      </div>
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://uwrobotlearning.github.io/WheeledLab/">Docs</a>
+        <span class="navbar-item">
+          <a href="https://github.com/UWRobotLearning/WheeledLab" class="button is-inverted is-small">
+            <span class="icon"><i class="fab fa-github"></i></span>
+            <span>Code</span>
+          </a>
+        </span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Header -->
+<section class="section" style="background-color: #f8f9fa;">
+  <div class="container is-max-desktop has-text-centered">
+    <h1 class="title is-1" style="letter-spacing: 0.01em;">WL@UW</h1>
+    <p class="subtitle is-4 mt-2">Wheeled Lab @ University of Washington</p>
+  </div>
+</section>
+
+<!-- What is WL@UW -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="content is-size-5">
+      <p>
+        <strong>WL@UW</strong> is a space between traditional robotics clubs at UW and academic
+        robotics research at CSE. It is designed for students who are just beginning (or
+        thinking about beginning) robotics research in data-driven methods like
+        <strong>Reinforcement Learning</strong>, <strong>Robot Simulation</strong>,
+        <strong>Computer Vision</strong>, etc.
+      </p>
+      <p>
+        Wheeled Lab students are motivated by their own research questions and are supported through
+        the <a href="https://robotlearning.cs.washington.edu/">Robot Learning Laboratory</a> to
+        enable hands-on development (project scoping, robot hardware, compute, design space, etc.).
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Projects / Members showcase -->
+<section class="section" style="padding-top: 0;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-2 has-text-centered is-spaced">Students &amp; Projects</h2>
+    <p class="subtitle is-6 has-text-centered has-text-grey mb-6">
+      Each student (or team) pursues their own research question.
+    </p>
+
+    <!--
+      The cards below are generated from static/data/team.yaml — edit THAT file
+      to add / remove / update people. No HTML required.
+    -->
+    <div id="team-showcase"></div>
+
+  </div>
+</section>
+
+<!-- Alumni -->
+<section class="section" style="padding-top: 0;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-2 has-text-centered is-spaced">Alumni</h2>
+    <p class="subtitle is-6 has-text-centered has-text-grey mb-6">
+      Thanks for your contributions to making Wheeled Lab a publicly inclusive space!
+    </p>
+    <!-- Generated from static/data/alumni.yaml — edit THAT file to add people. -->
+    <div id="alumni-showcase"></div>
+  </div>
+</section>
+
+<!-- Showcase -->
+<section class="section" style="background-color: #f8f9fa;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-2 has-text-centered is-spaced">Showcase</h2>
+    <p class="subtitle is-6 has-text-centered has-text-grey mb-6">
+      Posters, demos, and project highlights.
+    </p>
+    <!-- Generated from static/data/showcase.yaml — edit THAT file to add items. -->
+    <div id="showcase"></div>
+  </div>
+</section>
+
+<!-- Get involved -->
+<section class="section" style="background-color: #f8f9fa;">
+  <div class="container is-max-desktop has-text-centered">
+    <h2 class="title is-3">Interested in joining?</h2>
+    <p class="is-size-5 mb-4">
+      If you're a UW student curious about hands-on robot learning research, we'd love to hear
+      from you.
+    </p>
+    <a class="button is-primary is-medium" href="./index.html#contact">
+      <span class="icon"><i class="fas fa-envelope"></i></span>
+      <span>Get in touch</span>
+    </a>
+  </div>
+</section>
+
+<footer class="footer" style="padding: 2rem 1.5rem;">
+  <div class="container">
+    <div class="content has-text-centered is-size-7 has-text-grey">
+      <p class="mb-0">
+        <strong>WL@UW</strong> &middot; University of Washington &middot;
+        Paul G. Allen School of Computer Science &amp; Engineering &middot;
+        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  html { scroll-behavior: smooth; }
+  .project-links a { color: #6366f1; }
+  .media-left .image + .image { margin-top: 0.5rem; }
+  .avatar-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #6366f1;
+    color: #fff;
+    font-size: 2.2rem;
+    font-weight: 700;
+    border-radius: 50%;
+  }
+</style>
+<script src="./static/vendor/js-yaml/js-yaml.min.js"></script>
+<script src="./static/js/team.js"></script>
+<script src="./static/js/showcase.js"></script>
+</body>
+</html>

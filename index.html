@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="stylesheet" href="./static/css/docs.css?v=3">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script defer src="./static/js/fontawesome.all.min.js"></script>
   <script src="./static/js/bulma-carousel.min.js"></script>
@@ -46,7 +47,8 @@
     <!-- Hero head: will stick at the top -->
     <div class="hero-head is-hidden-mobile">
       <header class="navbar">
-        <div class="container is-size-5">
+        <div class="container is-size-5" style="position: relative;">
+          <a class="wlatuw-btn" href="./wlatuw.html">WL@UW</a>
           <div class="navbar-menu">
             <div class="navbar-start">
               <a class="navbar-item" href="#contributing">Contributing</a>
@@ -60,21 +62,16 @@
                 </span>
                 <span>Paper</span>
               </a>
-              <a class="navbar-item  pl-4 pr-4" href="https://arxiv.org/abs/2502.07380">
-                <span class="icon" style="margin-right:5px;">
-                  <img src="./static/images/arxiv.svg" alt="ArXiv" />
-                </span>
-                <span>arXiv</span> </a>
               <!-- <a href="" class="navbar-item  pl-4 pr-4">
                 <span class="icon" style="margin-right:5px;">
                   <img src="./static/images/youtube.svg" alt="Youtube" />
                 </span>
                 <span>Video</span> </a> -->
-              <a class="navbar-item pl-4 pr-4" href="https://lycheeai-hub.com/isaac-lab/projects/wheeled-lab">
+              <a class="navbar-item pl-4 pr-4" href="./overview.html">
                 <span class="icon" style="margin-right:5px;">
-                  <img src="./static/images/lycheeai.avif" alt="Tutorials" />
+                  <i class="fas fa-book-open"></i>
                 </span>
-                <span>Tutorials</span>
+                <span>Learn</span>
               </a>
               <span class="navbar-item  pl-4 pr-4">
                 <a href="https://github.com/UWRobotLearning/WheeledLab" class="button is-inverted is-large">
@@ -143,14 +140,6 @@
                   <img src="./static/images/pdf.svg" alt="PDF" />
                 </span>
                 <span>Paper</span>
-              </a>
-            </span>
-            <span class="link-block">
-              <a href="" class="external-link button is-normal is-rounded is-dark">
-                <span class="icon">
-                  <img src="./static/images/arxiv.svg" alt="ArXiv" />
-                </span>
-                <span>arXiv</span>
               </a>
             </span>
             <!-- Video Link. -->
@@ -626,6 +615,10 @@
 
 <footer class="footer">
   <div class="container">
+    <div class="visitor-map-wrap">
+      <p class="menu-label">Global Visitors</p>
+      <div id="visitor-map"></div>
+    </div>
     <div class="columns is-centered">
       <div class="column is-8">
         <div class="content">
@@ -650,6 +643,7 @@
       </div>
     </div>
   </div>
+  <script src="./static/js/visitor-map.js"></script>
 </footer>
 <script src="./static/js/video.js"></script>
 <script>
@@ -748,6 +742,28 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
     transform: translateY(-1px);
     color: white;
+  }
+
+  /* Centered WL@UW button in the hero navbar */
+  .wlatuw-btn {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    background: #6366f1;
+    color: #fff !important;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border-radius: 999px;
+    padding: 0.45em 1.5em;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .wlatuw-btn:hover {
+    background: #4f46e5;
+    color: #fff !important;
+    transform: translate(-50%, -50%) scale(1.06);
   }
   
   @keyframes fadeIn {

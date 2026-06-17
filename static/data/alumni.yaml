@@ -1,0 +1,18 @@
+# =============================================================================
+#  WL@UW ALUMNI  —  EDIT THIS FILE (no HTML needed)
+# =============================================================================
+#  Same format as team.yaml: name, role, photo, bio, tags (all optional but name).
+#  Leave photo "" to show the person's initial.
+# =============================================================================
+
+- name: Yanda Bao
+  role: ""
+  photo: ""
+  bio: ""
+  tags: []
+
+- name: Sidharth Rajagopal
+  role: ""
+  photo: ""
+  bio: ""
+  tags: []

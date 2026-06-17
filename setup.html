@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Wheeled Lab — Installation, Setup & Codebase">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wheeled Lab — Installation, Setup &amp; Codebase</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="stylesheet" href="./static/css/docs.css?v=3">
+  <link rel="stylesheet" href="./static/vendor/highlight/github.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script defer src="./static/js/docs.js?v=3"></script>
+  <meta property="og:site_name" content="Wheeled Lab" />
+  <meta property="og:title" content="Wheeled Lab — Installation, Setup &amp; Codebase" />
+</head>
+
+<body>
+
+<!-- Top navbar -->
+<nav class="navbar is-dark" role="navigation" aria-label="main navigation" style="position: sticky; top: 0; z-index: 1000;">
+  <div class="container is-max-fullhd">
+    <div class="navbar-brand">
+      <a class="navbar-item" id="docs-sidebar-toggle" role="button" aria-label="Toggle contents sidebar" title="Toggle contents">
+        <span class="icon"><i class="fas fa-bars"></i></span>
+      </a>
+      <a class="navbar-item has-text-weight-bold is-size-5" href="./index.html">Wheeled Lab</a>
+    </div>
+    <div class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="./index.html">Home</a>
+        <a class="navbar-item" href="./overview.html">Introduction</a>
+        <a class="navbar-item is-active" href="./setup.html">Setup</a>
+        <a class="navbar-item" href="./drifting.html">Drifting</a>
+      </div>
+      <div class="navbar-end">
+        <a class="navbar-item" id="distraction-toggle" role="button" title="Hide videos and images">
+          <span class="icon"><i class="fas fa-eye-slash"></i></span>
+          <span class="control-label">No Distractions</span>
+        </a>
+        <div class="navbar-item" title="Text size">
+          <span class="icon"><i class="fas fa-font"></i></span>
+          <input type="range" id="font-size-slider" min="80" max="150" step="5" value="100" aria-label="Text size" style="width: 90px; margin-left: 6px;">
+        </div>
+        <a class="navbar-item" href="https://uwrobotlearning.github.io/WheeledLab/">Docs</a>
+        <span class="navbar-item">
+          <a href="https://github.com/UWRobotLearning/WheeledLab" class="button is-inverted is-small">
+            <span class="icon"><i class="fab fa-github"></i></span>
+            <span>Code</span>
+          </a>
+        </span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="docs-layout">
+
+  <!-- Syllabus sidebar -->
+  <aside id="docs-sidebar" class="docs-sidebar-col">
+    <nav class="menu docs-sidebar">
+      <a class="docs-sidebar-brand" href="./index.html">
+        <span class="icon has-text-primary"><i class="fas fa-graduation-cap"></i></span>
+        <span>Wheeled Lab Course</span>
+      </a>
+
+      <p class="menu-label">Overview</p>
+      <ul class="menu-list">
+        <li><a href="./index.html">Home</a></li>
+        <li><a href="./overview.html">Introduction</a></li>
+      </ul>
+
+      <p class="menu-label">Getting Started</p>
+      <ul class="menu-list">
+        <li>
+          <a href="./setup.html" class="is-active">Installation, Setup &amp; Codebase</a>
+          <ul>
+            <li><a href="#codebase">Codebase Structure</a></li>
+            <li><a href="#get-started">About configclass</a></li>
+            <li><a href="#hydra">Hydra</a></li>
+          </ul>
+        </li>
+      </ul>
+
+      <p class="menu-label">Sim2Real Tasks</p>
+      <ul class="menu-list">
+        <li><a href="./drifting.html">Drifting</a></li>
+        <li><a class="is-disabled">Elevation <span class="tag is-light is-rounded ml-2">soon</span></a></li>
+        <li><a class="is-disabled">Visual <span class="tag is-light is-rounded ml-2">soon</span></a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main content -->
+  <main class="docs-content">
+
+    <nav class="breadcrumb is-small" aria-label="breadcrumbs">
+      <ul>
+        <li><a href="./overview.html">Introduction</a></li>
+        <li class="is-active"><a href="#" aria-current="page">Installation, Setup &amp; Codebase</a></li>
+      </ul>
+    </nav>
+    <h1 class="title is-1">Installation, Setup &amp; Codebase</h1>
+    <p class="subtitle is-4 mt-2">
+      Get the codebase running and learn the building blocks you'll see everywhere in Wheeled Lab.
+    </p>
+
+    <!-- Codebase Structure -->
+    <div class="content is-size-5">
+      <h2 class="title is-3 mt-5" id="codebase">Codebase Structure</h2>
+      <p>
+        Make sure to check this README out — it walks through how the RL training code is
+        organized:
+      </p>
+      <div class="box">
+        <span class="icon-text">
+          <span class="icon"><i class="fab fa-github"></i></span>
+          <span>
+            <a href="https://github.com/UWRobotLearning/WheeledLab/tree/main/source/wheeledlab_rl">
+              WheeledLab/source/wheeledlab_rl</a>
+            — main RL training package
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <!-- How to Get Started -->
+    <div class="content is-size-5">
+      <h2 class="title is-3 mt-6" id="get-started">How to Get Started</h2>
+
+      <h3 class="title is-4">About <code>configclass</code></h3>
+      <p>
+        The <code>configclass</code> is an important building block of Isaac Lab RL
+        environments. If you know what a Python <code>dataclass</code> is, then you already
+        know how a <code>configclass</code> works. This section introduces how they're used
+        in Wheeled Lab — because they're used <em>everywhere</em>.
+      </p>
+
+      <h4 class="title is-5">Convenient Class Definition</h4>
+      <p>Through <code>dataclass</code> / <code>configclass</code>, these two are equivalent:</p>
+      <div class="columns">
+        <div class="column">
+          <pre><code class="language-python">class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age</code></pre>
+        </div>
+        <div class="column">
+          <pre><code class="language-python">from dataclasses import dataclass
+
+@dataclass
+class Person:
+    name: str
+    age: int</code></pre>
+        </div>
+      </div>
+      <p>
+        A <code>dataclass</code> is perfect for classes which mainly hold just data, which
+        tends to be the case for a lot of configuration objects. Because RL environments have
+        so many parameters, you'll see them everywhere in our config files. Imagine if we had
+        to write the left side for every possible setting we wanted to add!
+      </p>
+
+      <h4 class="title is-5">Inheritance &amp; Overrides</h4>
+      <p>Take a look at these two RL environment configurations:</p>
+      <ul>
+        <li><code>MushrDriftRLEnvCfg</code></li>
+        <li><code>MushrDriftPlayEnvCfg</code></li>
+      </ul>
+      <p>
+        The "Play" environment is meant to be a playback environment for our training
+        environment. Except, the training environment has things like aggressive
+        terminations, robot pushing, rewards, etc., which are designed to help train the
+        robot. We don't need these things for just playing a trained policy. So, we can simply
+        inherit everything from the <code>RLEnvCfg</code> and override them to define a
+        separate <code>PlayEnvCfg</code>.
+      </p>
+
+      <h4 class="title is-5" id="hydra">Hydra</h4>
+      <p>
+        These <code>configclass</code> objects lend themselves nicely to
+        <a href="https://hydra.cc/">hydra</a>, a framework for creating hierarchical configs
+        (like the ones in Isaac Lab) and overriding them through the command line interface
+        (CLI). This lets us do stuff like change the weight of a specific reward when we run
+        training:
+      </p>
+      <pre><code class="language-bash">python scripts/train_rl.py --headless env.rewards.side_slip.weight=100.0 -r RSS_DRIFT_CONFIG</code></pre>
+      <p>
+        This becomes more important as you start training more and more models, but you don't
+        want to affect your latest stable parameters.
+      </p>
+    </div>
+
+    <!-- Prev/Next -->
+    <div class="level mt-6">
+      <div class="level-left">
+        <a class="button is-light" href="./overview.html">
+          <span class="icon"><i class="fas fa-arrow-left"></i></span>
+          <span>Introduction</span>
+        </a>
+      </div>
+      <div class="level-right">
+        <a class="button is-primary" href="./drifting.html">
+          <span>Next: Drifting</span>
+          <span class="icon"><i class="fas fa-arrow-right"></i></span>
+        </a>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="footer" style="padding: 2rem 1.5rem;">
+  <div class="container">
+    <div class="content has-text-centered is-size-7 has-text-grey">
+      <p class="mb-0">
+        <strong>Wheeled Lab</strong> &middot; University of Washington &middot;
+        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script src="./static/vendor/highlight/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+<style>
+  pre { border-radius: 8px; }
+  pre code.hljs { background: transparent; padding: 0; }
+</style>
+</body>
+</html>
