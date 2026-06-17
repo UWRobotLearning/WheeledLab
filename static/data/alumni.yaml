@@ -1,18 +1,12 @@
 # =============================================================================
 #  WL@UW ALUMNI  —  EDIT THIS FILE (no HTML needed)
 # =============================================================================
-#  Same format as team.yaml: name, role, photo, bio, tags (all optional but name).
-#  Leave photo "" to show the person's initial.
+#  Shown as a simple list of names. Just add a line per person:  - name: Full Name
 # =============================================================================
 
 - name: Yanda Bao
-  role: ""
-  photo: ""
-  bio: ""
-  tags: []
-
 - name: Sidharth Rajagopal
-  role: ""
-  photo: ""
-  bio: ""
-  tags: []
+- name: Gabriel Guo
+- name: Bhaumik Mehta
+- name: Bryan Xu
+- name: Preet Shah

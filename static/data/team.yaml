@@ -24,7 +24,7 @@
   tags: []
 
 - name: Laura Wang
-  role: Undergraduate, Computer Science · University of Washington
+  role: Student
   photo: laura_wang.png
   bio: "Laura is an undergraduate computer science student at the University of
     Washington working with Tyler Han. She is broadly interested in robust robot
@@ -33,19 +33,19 @@
   tags: [Robust Autonomy, Reinforcement Learning]
 
 - name: Aarul Motiani
-  role: University of Washington
+  role: Student
   photo: aarul_motiani.jpg
   bio: ""
   tags: []
 
 - name: Anirudh Rao
-  role: University of Washington
+  role: Student
   photo: anirudh_rao.png
   bio: ""
   tags: []
 
 - name: Jayson Xu
-  role: Rising Senior · University of Washington
+  role: Student
   photo: jayson_xu.png
   bio: "Jayson is a rising senior at UW, currently interning at Roboforce, a robotics
     company in the Bay Area, while working on a drifting policy project in the Lab —
@@ -54,7 +54,7 @@
   tags: [Reinforcement Learning, Drifting, LLM Reward Design]
 
 - name: Caleb Hsu
-  role: Wheeled Lab
+  role: Student
   photo: caleb-hsu.jpg
   bio: "Within Wheeled Lab, Caleb is building an end-to-end racing task that pushes
     the hardware limits of the RC cars to their extreme. In his free time he likes to
@@ -66,4 +66,4 @@
   role: Advisor
   photo: tyler-han.png
   bio: "Tyler is a final-year PhD student in the Robot Learning Laboratory at the University of Washington, advised by Byron Boots. His research focuses on natural-world supervision for robot learning in the real world."
-  tags: [Weakly Supervised Learning, Real-World Learning]
+  tags: [Learning from Observation, Real-World Reinforcement Learning, Online World Modeling]

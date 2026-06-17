@@ -51,14 +51,22 @@
       '</div></article></div>';
   }
 
-  // Each roster: a mount element id + the YAML file that fills it.
+  // A condensed list of just names (used for alumni).
+  function nameList(people) {
+    return '<p class="has-text-centered is-size-5">' +
+      people.map(function (p) { return esc(p.name); }).join('&nbsp;&nbsp;·&nbsp;&nbsp;') +
+      '</p>';
+  }
+
+  // Each roster: mount id, YAML file, and render style ('cards' or 'list').
   var ROSTERS = [
-    { id: 'team-showcase', file: 'team.yaml' },
-    { id: 'alumni-showcase', file: 'alumni.yaml' }
+    { id: 'team-showcase', file: 'team.yaml', style: 'cards' },
+    { id: 'alumni-showcase', file: 'alumni.yaml', style: 'list' }
   ];
 
-  function render(mount, people) {
-    mount.innerHTML = (people && people.length) ? people.map(card).join('') : '';
+  function render(mount, people, style) {
+    if (!people || !people.length) { mount.innerHTML = ''; return; }
+    mount.innerHTML = (style === 'list') ? nameList(people) : people.map(card).join('');
   }
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -68,7 +76,7 @@
       fetch('./static/data/' + roster.file)
         .then(function (r) { return r.text(); })
         .then(function (text) {
-          render(mount, (window.jsyaml ? jsyaml.load(text) : []) || []);
+          render(mount, (window.jsyaml ? jsyaml.load(text) : []) || [], roster.style);
         })
         .catch(function () {
           mount.innerHTML = '<p class="has-text-grey has-text-centered">' +
