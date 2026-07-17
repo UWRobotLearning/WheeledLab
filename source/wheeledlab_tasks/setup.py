@@ -15,6 +15,7 @@ INSTALL_REQUIRES = [
     # NOTE: Add dependencies
     "psutil",
     "gymnasium==1.0.0",
+    "noise==1.2.2"
 ]
 
 # Installation operation
