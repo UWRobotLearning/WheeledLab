@@ -118,19 +118,6 @@
   }
 }
 
-/* ---- Footer visitor map -------------------------------------------- */
-.visitor-map-wrap {
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-.visitor-map-wrap .menu-label {
-  justify-content: center;
-  display: block;
-  text-align: center;
-}
-#visitor-map { display: inline-block; width: 380px; max-width: 92%; text-align: left; }
-#visitor-map .leaflet-container { font: inherit; }
-
 /* Smooth in-page anchor scrolling, offset for sticky navbar */
 html { scroll-behavior: smooth; }
 .docs-content [id] { scroll-margin-top: calc(var(--wl-navbar-h) + 1rem); }

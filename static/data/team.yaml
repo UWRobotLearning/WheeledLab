@@ -22,8 +22,14 @@
 # =============================================================================
 
 - name: Urvi Rutia
-  role: WL@UW Liaison · University of Washington
+  role: Maintainer · University of Washington
   photo: urvi-rutia.jpg
+  bio: ""
+  tags: []
+
+- name: Maanasa Ramadugu
+  role: WL@UW Liaison · University of Washington
+  photo: ""
   bio: ""
   tags: []
 
